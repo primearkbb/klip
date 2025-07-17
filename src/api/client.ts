@@ -1,4 +1,4 @@
-import { Model } from './models.ts';
+import type { Model } from './models.ts';
 import { withRetry } from '../utils/retry.ts';
 
 export interface Message {

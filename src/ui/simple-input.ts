@@ -1,4 +1,3 @@
-import { colors } from '@cliffy/ansi/colors';
 
 export class SimpleInput {
   async readLine(prompt: string): Promise<string | null> {
@@ -14,12 +13,12 @@ export class SimpleInput {
     return input.trim();
   }
 
-  async readPassword(prompt: string): Promise<string | null> {
+  readPassword(prompt: string): Promise<string | null> {
     // For password input, we'll use the same method but could enhance with masking
     return this.readLine(prompt);
   }
 
-  async readWithHistory(prompt: string, history: string[] = []): Promise<string | null> {
+  readWithHistory(prompt: string, _history: string[] = []): Promise<string | null> {
     // Simplified version - just read a line for now
     return this.readLine(prompt);
   }

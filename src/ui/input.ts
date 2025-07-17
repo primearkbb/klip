@@ -1,4 +1,3 @@
-import { colors } from '@cliffy/ansi/colors';
 
 export class InputHandler {
   private history: string[] = [];
