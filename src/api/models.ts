@@ -6,8 +6,41 @@ export interface Model {
   contextWindow: number;
 }
 
+export interface OpenRouterModel {
+  id: string;
+  name: string;
+  description: string;
+  context_length: number;
+  architecture: {
+    modality: string;
+    tokenizer: string;
+    instruct_type: string;
+  };
+  pricing: {
+    prompt: string;
+    completion: string;
+  };
+  top_provider: {
+    max_completion_tokens: number;
+  };
+}
+
 export const MODELS: Record<string, Model> = {
   // Anthropic Models
+  'claude-sonnet-4-20250522': {
+    id: 'claude-sonnet-4-20250522',
+    name: 'Claude Sonnet 4',
+    provider: 'anthropic',
+    maxTokens: 64000,
+    contextWindow: 200000,
+  },
+  'claude-opus-4-20250522': {
+    id: 'claude-opus-4-20250522',
+    name: 'Claude Opus 4',
+    provider: 'anthropic',
+    maxTokens: 32000,
+    contextWindow: 200000,
+  },
   'claude-3-5-sonnet-20241022': {
     id: 'claude-3-5-sonnet-20241022',
     name: 'Claude 3.5 Sonnet',
@@ -22,21 +55,49 @@ export const MODELS: Record<string, Model> = {
     maxTokens: 8192,
     contextWindow: 200000,
   },
-  'claude-3-opus-20240229': {
-    id: 'claude-3-opus-20240229',
-    name: 'Claude 3 Opus',
-    provider: 'anthropic',
-    maxTokens: 4096,
-    contextWindow: 200000,
-  },
 
   // OpenAI Models
-  'gpt-4-turbo-2024-04-09': {
-    id: 'gpt-4-turbo-2024-04-09',
-    name: 'GPT-4 Turbo',
+  'gpt-4.1': {
+    id: 'gpt-4.1',
+    name: 'GPT-4.1',
     provider: 'openai',
-    maxTokens: 4096,
-    contextWindow: 128000,
+    maxTokens: 16384,
+    contextWindow: 1000000,
+  },
+  'gpt-4.1-mini': {
+    id: 'gpt-4.1-mini',
+    name: 'GPT-4.1 Mini',
+    provider: 'openai',
+    maxTokens: 16384,
+    contextWindow: 1000000,
+  },
+  'gpt-4.1-nano': {
+    id: 'gpt-4.1-nano',
+    name: 'GPT-4.1 Nano',
+    provider: 'openai',
+    maxTokens: 16384,
+    contextWindow: 1000000,
+  },
+  'o3': {
+    id: 'o3',
+    name: 'OpenAI o3',
+    provider: 'openai',
+    maxTokens: 16384,
+    contextWindow: 200000,
+  },
+  'o3-pro': {
+    id: 'o3-pro',
+    name: 'OpenAI o3 Pro',
+    provider: 'openai',
+    maxTokens: 16384,
+    contextWindow: 200000,
+  },
+  'o4-mini': {
+    id: 'o4-mini',
+    name: 'OpenAI o4 Mini',
+    provider: 'openai',
+    maxTokens: 16384,
+    contextWindow: 200000,
   },
   'gpt-4o': {
     id: 'gpt-4o',
@@ -51,13 +112,6 @@ export const MODELS: Record<string, Model> = {
     provider: 'openai',
     maxTokens: 16384,
     contextWindow: 128000,
-  },
-  'gpt-3.5-turbo': {
-    id: 'gpt-3.5-turbo',
-    name: 'GPT-3.5 Turbo',
-    provider: 'openai',
-    maxTokens: 4096,
-    contextWindow: 16385,
   },
 
   // OpenRouter Models (using OpenAI-compatible format)
@@ -97,5 +151,61 @@ export function getAllModels(): Model[] {
 }
 
 export function getDefaultModel(): Model {
-  return MODELS['claude-3-5-sonnet-20241022'];
+  return MODELS['claude-sonnet-4-20250522'];
+}
+
+let openRouterModelsCache: Model[] | null = null;
+let openRouterModelsCacheTime: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+export async function fetchOpenRouterModels(): Promise<Model[]> {
+  const now = Date.now();
+  
+  // Return cached models if cache is still valid
+  if (openRouterModelsCache && (now - openRouterModelsCacheTime) < CACHE_DURATION) {
+    return openRouterModelsCache;
+  }
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/models', {
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('OPENROUTER_API_KEY') || ''}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch OpenRouter models: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const openRouterModels: OpenRouterModel[] = data.data || [];
+
+    // Convert OpenRouter models to our Model interface
+    const convertedModels: Model[] = openRouterModels.map((model: OpenRouterModel) => ({
+      id: model.id,
+      name: model.name,
+      provider: 'openrouter' as const,
+      maxTokens: model.top_provider?.max_completion_tokens || 4096,
+      contextWindow: model.context_length || 4096,
+    }));
+
+    // Cache the results
+    openRouterModelsCache = convertedModels;
+    openRouterModelsCacheTime = now;
+
+    return convertedModels;
+  } catch (error) {
+    console.error('Error fetching OpenRouter models:', error);
+    
+    // Fallback to static OpenRouter models if dynamic fetch fails
+    return Object.values(MODELS).filter(model => model.provider === 'openrouter');
+  }
+}
+
+export async function getAllModelsWithOpenRouter(): Promise<Model[]> {
+  const staticModels = Object.values(MODELS).filter(model => model.provider !== 'openrouter');
+  const openRouterModels = await fetchOpenRouterModels();
+  
+  return [...staticModels, ...openRouterModels];
 }

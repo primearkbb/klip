@@ -1,7 +1,7 @@
 import { colors } from '@cliffy/ansi/colors';
 import { KeyStore } from '../storage/keystore.ts';
-import { getDefaultModel, getAllModels, getModel, Model } from '../api/models.ts';
-import { ApiClient, Message, ChatRequest } from '../api/client.ts';
+import { getDefaultModel, getAllModels, getAllModelsWithOpenRouter, getModel, type Model } from '../api/models.ts';
+import { ApiClient, type Message, type ChatRequest } from '../api/client.ts';
 import { InputHandler } from './input.ts';
 import { displayHelp } from './banner.ts';
 import { ChatLogger } from '../storage/logger.ts';
@@ -17,7 +17,7 @@ export class App {
   private messages: Message[] = [];
   private inputHandler: InputHandler;
   private logger: ChatLogger;
-  private interruptibleOp: InterruptibleOperation<any> | null = null;
+  private interruptibleOp: InterruptibleOperation<string> | null = null;
   private autocomplete: AutocompleteInput;
 
   constructor() {
@@ -141,7 +141,7 @@ export class App {
     
     this.messages.push(userMessage);
     
-    this.interruptibleOp = new InterruptibleOperation<void>();
+    this.interruptibleOp = new InterruptibleOperation<string>();
     
     try {
       console.log(colors.brightGreen('\nAssistant: '));
@@ -224,33 +224,81 @@ export class App {
   private async showModels(): Promise<void> {
     console.log(colors.brightBlue('\nAvailable Models:'));
     
-    const models = getAllModels();
-    const groupedModels = models.reduce((acc, model) => {
-      if (!acc[model.provider]) acc[model.provider] = [];
-      acc[model.provider].push(model);
-      return acc;
-    }, {} as Record<string, Model[]>);
+    const spinner = new Spinner('Fetching models...');
+    spinner.start();
     
-    for (const [provider, providerModels] of Object.entries(groupedModels)) {
-      console.log(colors.yellow(`\n${provider.toUpperCase()}:`));
+    try {
+      const models = await getAllModelsWithOpenRouter();
+      spinner.stop();
       
-      for (const model of providerModels) {
-        const current = model.id === this.currentModel.id ? colors.green(' (current)') : '';
-        console.log(`  ${colors.cyan(model.id)} - ${model.name}${current}`);
+      const groupedModels = models.reduce((acc, model) => {
+        if (!acc[model.provider]) acc[model.provider] = [];
+        acc[model.provider].push(model);
+        return acc;
+      }, {} as Record<string, Model[]>);
+      
+      for (const [provider, providerModels] of Object.entries(groupedModels)) {
+        console.log(colors.yellow(`\n${provider.toUpperCase()}:`));
+        
+        for (const model of providerModels) {
+          const current = model.id === this.currentModel.id ? colors.green(' (current)') : '';
+          console.log(`  ${colors.cyan(model.id)} - ${model.name}${current}`);
+        }
       }
+      
+      console.log(colors.dim('\nUse /model <model-id> to switch models'));
+    } catch (error) {
+      spinner.fail('Failed to fetch models');
+      console.log(colors.red(`Error: ${error instanceof Error ? error.message : String(error)}`));
+      console.log(colors.dim('Falling back to static model list...'));
+      
+      // Fallback to static models
+      const models = getAllModels();
+      const groupedModels = models.reduce((acc, model) => {
+        if (!acc[model.provider]) acc[model.provider] = [];
+        acc[model.provider].push(model);
+        return acc;
+      }, {} as Record<string, Model[]>);
+      
+      for (const [provider, providerModels] of Object.entries(groupedModels)) {
+        console.log(colors.yellow(`\n${provider.toUpperCase()}:`));
+        
+        for (const model of providerModels) {
+          const current = model.id === this.currentModel.id ? colors.green(' (current)') : '';
+          console.log(`  ${colors.cyan(model.id)} - ${model.name}${current}`);
+        }
+      }
+      
+      console.log(colors.dim('\nUse /model <model-id> to switch models'));
     }
-    
-    console.log(colors.dim('\nUse /model <model-id> to switch models'));
   }
 
   private async switchModel(modelId: string): Promise<void> {
     if (!modelId) {
       console.log(colors.yellow('Available models:'));
-      const models = getAllModels();
-      models.forEach((model, i) => {
-        const current = model.id === this.currentModel.id ? colors.green(' (current)') : '';
-        console.log(`  ${i + 1}. ${colors.cyan(model.id)} - ${model.name}${current}`);
-      });
+      
+      const spinner = new Spinner('Fetching models...');
+      spinner.start();
+      
+      try {
+        const models = await getAllModelsWithOpenRouter();
+        spinner.stop();
+        
+        models.forEach((model, i) => {
+          const current = model.id === this.currentModel.id ? colors.green(' (current)') : '';
+          console.log(`  ${i + 1}. ${colors.cyan(model.id)} - ${model.name}${current}`);
+        });
+      } catch (error) {
+        spinner.fail('Failed to fetch models');
+        console.log(colors.red(`Error: ${error instanceof Error ? error.message : String(error)}`));
+        console.log(colors.dim('Falling back to static model list...'));
+        
+        const models = getAllModels();
+        models.forEach((model, i) => {
+          const current = model.id === this.currentModel.id ? colors.green(' (current)') : '';
+          console.log(`  ${i + 1}. ${colors.cyan(model.id)} - ${model.name}${current}`);
+        });
+      }
       
       const selectedModel = await promptUser(colors.brightBlue('Enter model ID: '));
       
@@ -262,7 +310,19 @@ export class App {
       modelId = selectedModel;
     }
     
-    const model = getModel(modelId);
+    // First check static models
+    let model = getModel(modelId);
+    
+    // If not found in static models, try to find in dynamic OpenRouter models
+    if (!model) {
+      try {
+        const allModels = await getAllModelsWithOpenRouter();
+        model = allModels.find(m => m.id === modelId);
+      } catch (error) {
+        console.log(colors.red(`Error fetching dynamic models: ${error instanceof Error ? error.message : String(error)}`));
+      }
+    }
+    
     if (!model) {
       console.log(colors.red(`Model not found: ${modelId}`));
       console.log(colors.dim('Use /models to see available models'));
@@ -355,7 +415,7 @@ export class App {
         // Try a minimal request to validate the key
         const testModel = this.currentModel.provider === provider ? this.currentModel : {
           ...this.currentModel,
-          provider: provider as any
+          provider: provider as 'anthropic' | 'openai' | 'openrouter'
         };
         
         await testClient.chat({

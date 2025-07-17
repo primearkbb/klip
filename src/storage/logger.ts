@@ -1,4 +1,4 @@
-import { Message } from '../api/client.ts';
+import type { Message } from '../api/client.ts';
 
 export interface ChatLog {
   timestamp: number;

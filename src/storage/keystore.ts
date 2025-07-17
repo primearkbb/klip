@@ -1,5 +1,5 @@
 import { encodeHex, decodeHex } from '@std/encoding/hex';
-import { encodeBase64, decodeBase64 } from '@std/encoding/base64';
+import type { encodeBase64, decodeBase64 } from '@std/encoding/base64';
 
 export interface ApiKeys {
   anthropic?: string;
