@@ -1,0 +1,51 @@
+# Deno
+.deno/
+deno.lock
+
+# Build artifacts
+/dist/
+/build/
+
+# Config and sensitive files
+.env
+.env.local
+.env.production
+.env.development
+*.key
+*.pem
+*.p12
+*.pfx
+
+# User data
+.klip/
+.clippy/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test files
+*test*.ts
+*debug*.ts
+*temp*.ts
+
+# Node.js (if using any npm packages)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Backup files
+*.bak
+*.backup
+*.tmp
