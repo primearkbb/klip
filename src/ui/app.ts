@@ -130,8 +130,11 @@ export class App {
   }
 
   private async chatLoop(): Promise<void> {
+    let isFirstPrompt = true;
     while (true) {
-      const input = await promptUser(colors.brightBlue('\n  > '));
+      const prompt = isFirstPrompt ? colors.brightBlue('\n  > ') : colors.brightBlue('  > ');
+      const input = await promptUser(prompt);
+      isFirstPrompt = false;
 
       if (input === null) {
         console.log(colors.yellow('\n  Goodbye!'));
