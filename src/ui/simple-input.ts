@@ -26,7 +26,7 @@ export class SimpleInput {
   }
 }
 
-// Read a line from stdin
+// Read a line from stdin with cursor positioning
 export async function promptUser(message: string): Promise<string | null> {
   try {
     // Write the prompt
@@ -41,6 +41,10 @@ export async function promptUser(message: string): Promise<string | null> {
     }
 
     const input = new TextDecoder().decode(buffer.subarray(0, bytesRead));
+    
+    // Clear the input line by moving cursor up and clearing
+    await Deno.stdout.write(new TextEncoder().encode('\x1b[1A\x1b[2K'));
+    
     return input.trim();
   } catch (error) {
     console.error('Input error:', error);

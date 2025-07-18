@@ -16,7 +16,7 @@ import { InterruptibleOperation } from '../utils/retry.ts';
 import { AutocompleteInput } from './autocomplete.ts';
 import { Spinner, withSpinner } from './spinner.ts';
 import { promptUser } from './simple-input.ts';
-import { ResponseFormatter, StreamingFormatter } from './formatting.ts';
+import { ResponseFormatter, StreamingFormatter, formatUserMessage } from './formatting.ts';
 
 export class App {
   private keyStore: KeyStore;
@@ -181,10 +181,17 @@ export class App {
 
     this.messages.push(userMessage);
 
-    // Just add some spacing before the response (user input already visible)
-    console.log();
+    // Display user message in new format
+    console.log(formatUserMessage(content));
 
     this.interruptibleOp = new InterruptibleOperation<string>();
+
+    // Show Klip response line with spinner
+    const klipSpinner = new Spinner('thinking...', { 
+      useKlipAnimation: true, 
+      prefix: colors.dim('~ Klip: ') 
+    });
+    klipSpinner.start();
 
     try {
       const request: ChatRequest = {
@@ -192,10 +199,6 @@ export class App {
         messages: this.messages,
         enableWebSearch: true,
       };
-
-      // Show a brief connecting message
-      const connectingSpinner = new Spinner('Thinking...');
-      connectingSpinner.start();
 
       const result = await this.interruptibleOp.execute(async (signal) => {
         let assistantContent = '';
@@ -212,10 +215,11 @@ export class App {
               throw new Error('Operation was interrupted');
             }
 
-            // Stop spinner on first chunk
+            // Stop spinner and clear line on first chunk
             if (firstChunk) {
-              connectingSpinner.stop();
-              console.log(colors.brightGreen('  Klip:'));
+              klipSpinner.stop();
+              // Move cursor to beginning of line and clear
+              Deno.stdout.write(new TextEncoder().encode('\r\x1b[2K'));
               firstChunk = false;
             }
 
@@ -238,7 +242,9 @@ export class App {
         return assistantContent;
       });
 
-      connectingSpinner.stop();
+      klipSpinner.stop();
+      // Clear the spinner line
+      Deno.stdout.write(new TextEncoder().encode('\r\x1b[2K'));
 
       if (result === null) {
         console.log(colors.yellow('\n  Response interrupted by user'));
@@ -246,7 +252,7 @@ export class App {
         return;
       }
 
-      console.log();
+      // No extra line break needed
 
       const assistantMessage: Message = {
         role: 'assistant',
@@ -275,6 +281,10 @@ export class App {
         );
       }
     } catch (error) {
+      klipSpinner.stop();
+      // Clear the spinner line
+      Deno.stdout.write(new TextEncoder().encode('\r\x1b[2K'));
+      
       const errorMessage = error instanceof Error
         ? error.message
         : String(error);

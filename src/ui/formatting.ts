@@ -315,75 +315,92 @@ export class ResponseFormatter {
 
 // Helper functions for message formatting
 export function formatUserMessage(content: string): string {
-  const decorator = colors.brightBlue('>');
-  const gutter = colors.dim('│');
-  const indent = '  ';
-  
-  const lines = content.split('\n');
-  const formattedLines = lines.map(line => {
-    if (line.trim() === '') return '';
-    return `${decorator} ${gutter} ${indent}${line}`;
-  });
-  
-  return formattedLines.join('\n');
+  const formatter = new StreamingFormatter({ messageType: 'user' });
+  return formatter.formatContent(content);
 }
 
 export function formatAssistantMessage(content: string): string {
-  const decorator = colors.dim('•');
-  const gutter = colors.dim('│');
-  const indent = '  ';
-  
-  const lines = content.split('\n');
-  const formattedLines = lines.map(line => {
-    if (line.trim() === '') return '';
-    return `${decorator} ${gutter} ${indent}${line}`;
-  });
-  
-  return formattedLines.join('\n');
+  const formatter = new StreamingFormatter({ messageType: 'assistant' });
+  return formatter.formatContent(content);
 }
 
 export function formatThinkingMessage(content: string): string {
-  const decorator = colors.dim('~');
-  const gutter = colors.dim('┊');
-  const indent = '  ';
-  
-  const lines = content.split('\n');
-  const formattedLines = lines.map(line => {
-    if (line.trim() === '') return '';
-    return `${decorator} ${gutter} ${indent}${colors.dim(line)}`;
-  });
-  
-  return formattedLines.join('\n');
+  const formatter = new StreamingFormatter({ messageType: 'thinking' });
+  return formatter.formatContent(content);
 }
 
 export class StreamingFormatter {
   private buffer: string = '';
   private messageType: 'user' | 'assistant' | 'thinking' = 'assistant';
-  private decorator: string = '';
-  private gutter: string = colors.dim('│');
-  private indent: string = '  ';
+  private isFirstChunk: boolean = true;
+  private maxWidth: number;
+  private baseIndent: string = '  ';
 
   constructor(options: FormatOptions = {}) {
     this.messageType = options.messageType ?? 'assistant';
-    this.updateFormatting();
+    this.maxWidth = Math.floor(this.getTerminalWidth() * 0.85);
   }
 
-  private updateFormatting(): void {
+  private getTerminalWidth(): number {
+    if (Deno.stdout.isTerminal()) {
+      return Deno.consoleSize().columns;
+    }
+    return 80;
+  }
+
+  private getSpeakerHeader(): string {
     switch (this.messageType) {
       case 'user':
-        this.decorator = colors.brightBlue('>');
-        this.gutter = colors.dim('│');
-        break;
+        return colors.brightBlue('*');
       case 'thinking':
-        this.decorator = colors.dim('~');
-        this.gutter = colors.dim('┊');
-        break;
+        return colors.dim('~');
       case 'assistant':
       default:
-        this.decorator = colors.dim('•');
-        this.gutter = colors.dim('│');
-        break;
+        return colors.dim('~');
     }
+  }
+
+  private getSpeakerLabel(): string {
+    switch (this.messageType) {
+      case 'user':
+        return colors.brightBlue(' You: ');
+      case 'thinking':
+        return colors.dim(' Thinking');
+      case 'assistant':
+      default:
+        return colors.dim(' Klip');
+    }
+  }
+
+  private wrapText(text: string, firstLinePrefix: string, continuationPrefix: string): string[] {
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+    let isFirstLine = true;
+    
+    const getAvailableWidth = (isFirst: boolean) => {
+      const prefix = isFirst ? firstLinePrefix : continuationPrefix;
+      return this.maxWidth - prefix.length;
+    };
+
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      const availableWidth = getAvailableWidth(isFirstLine);
+      
+      if (testLine.length > availableWidth && currentLine) {
+        lines.push((isFirstLine ? firstLinePrefix : continuationPrefix) + currentLine);
+        currentLine = word;
+        isFirstLine = false;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    if (currentLine) {
+      lines.push((isFirstLine ? firstLinePrefix : continuationPrefix) + currentLine);
+    }
+    
+    return lines;
   }
 
   addChunk(chunk: string): string {
@@ -394,33 +411,75 @@ export class StreamingFormatter {
       // Keep the last incomplete line in buffer
       this.buffer = lines.pop() || '';
       
-      // Format complete lines with decorator and gutter
-      const formattedLines = lines.map(line => {
-        if (line.trim() === '') return '';
-        return `${this.decorator} ${this.gutter} ${this.indent}${line}`;
-      });
-      
-      return formattedLines.join('\n') + (formattedLines.length > 0 ? '\n' : '');
+      // Format complete lines
+      const completedContent = lines.join(' ');
+      if (completedContent.trim()) {
+        const result = this.formatContent(completedContent);
+        return result;
+      }
     }
 
     return '';
   }
 
+  formatContent(content: string): string {
+    if (!content.trim()) return '';
+    
+    let result = '';
+    
+    // Add speaker header only for first chunk
+    if (this.isFirstChunk) {
+      const header = this.getSpeakerHeader();
+      const label = this.getSpeakerLabel();
+      
+      if (this.messageType === 'user') {
+        // Check if content is multiline or will wrap
+        const lines = content.split('\n');
+        const hasMultipleLines = lines.length > 1;
+        const firstLineLength = (header + label + lines[0]).length;
+        const willWrap = firstLineLength > this.maxWidth;
+        
+        if (hasMultipleLines || willWrap) {
+          // Multiline format: header + label on own line, then content
+          result = header + label + '\n';
+          const wrappedLines = this.wrapText(content, this.baseIndent, this.baseIndent);
+          result += wrappedLines.join('\n');
+        } else {
+          // Single line format: header + label + content
+          result = header + label + content;
+        }
+      } else {
+        // For assistant messages, header + label on its own line
+        result = header + label + '\n';
+        const wrappedLines = this.wrapText(content, this.baseIndent, this.baseIndent);
+        result += wrappedLines.join('\n');
+      }
+      this.isFirstChunk = false;
+    } else {
+      // Continuation content without speaker header
+      const wrappedLines = this.wrapText(content, this.baseIndent, this.baseIndent);
+      result = wrappedLines.join('\n');
+    }
+    
+    return result + '\n';
+  }
+
   finalize(): string {
     if (this.buffer.trim()) {
-      const final = `${this.decorator} ${this.gutter} ${this.indent}${this.buffer}`;
+      const result = this.formatContent(this.buffer);
       this.buffer = '';
-      return final;
+      return result;
     }
     return '';
   }
 
   setMessageType(type: 'user' | 'assistant' | 'thinking'): void {
     this.messageType = type;
-    this.updateFormatting();
+    this.isFirstChunk = true;
   }
 
   reset(): void {
     this.buffer = '';
+    this.isFirstChunk = true;
   }
 }
