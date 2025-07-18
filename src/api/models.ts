@@ -26,24 +26,42 @@ export interface OpenRouterModel {
 }
 
 export const MODELS: Record<string, Model> = {
-  // Anthropic Models
-  'claude-sonnet-4-20250522': {
-    id: 'claude-sonnet-4-20250522',
-    name: 'Claude Sonnet 4',
-    provider: 'anthropic',
-    maxTokens: 64000,
-    contextWindow: 200000,
-  },
-  'claude-opus-4-20250522': {
-    id: 'claude-opus-4-20250522',
+  // Anthropic Models - Claude 4 Series
+  'claude-opus-4-20250514': {
+    id: 'claude-opus-4-20250514',
     name: 'Claude Opus 4',
     provider: 'anthropic',
     maxTokens: 32000,
     contextWindow: 200000,
   },
+  'claude-sonnet-4-20250514': {
+    id: 'claude-sonnet-4-20250514',
+    name: 'Claude Sonnet 4',
+    provider: 'anthropic',
+    maxTokens: 8192,
+    contextWindow: 200000,
+  },
+  
+  // Anthropic Models - Claude 3.7 Series
+  'claude-3-7-sonnet-20250219': {
+    id: 'claude-3-7-sonnet-20250219',
+    name: 'Claude 3.7 Sonnet',
+    provider: 'anthropic',
+    maxTokens: 8192,
+    contextWindow: 200000,
+  },
+  
+  // Anthropic Models - Claude 3.5 Series
   'claude-3-5-sonnet-20241022': {
     id: 'claude-3-5-sonnet-20241022',
-    name: 'Claude 3.5 Sonnet',
+    name: 'Claude 3.5 Sonnet (v2)',
+    provider: 'anthropic',
+    maxTokens: 8192,
+    contextWindow: 200000,
+  },
+  'claude-3-5-sonnet-20240620': {
+    id: 'claude-3-5-sonnet-20240620',
+    name: 'Claude 3.5 Sonnet (v1)',
     provider: 'anthropic',
     maxTokens: 8192,
     contextWindow: 200000,
@@ -53,6 +71,22 @@ export const MODELS: Record<string, Model> = {
     name: 'Claude 3.5 Haiku',
     provider: 'anthropic',
     maxTokens: 8192,
+    contextWindow: 200000,
+  },
+  
+  // Anthropic Models - Claude 3 Series
+  'claude-3-opus-20240229': {
+    id: 'claude-3-opus-20240229',
+    name: 'Claude 3 Opus',
+    provider: 'anthropic',
+    maxTokens: 4096,
+    contextWindow: 200000,
+  },
+  'claude-3-haiku-20240307': {
+    id: 'claude-3-haiku-20240307',
+    name: 'Claude 3 Haiku',
+    provider: 'anthropic',
+    maxTokens: 4096,
     contextWindow: 200000,
   },
 
@@ -151,7 +185,7 @@ export function getAllModels(): Model[] {
 }
 
 export function getDefaultModel(): Model {
-  return MODELS['claude-sonnet-4-20250522'];
+  return MODELS['claude-sonnet-4-20250514'];
 }
 
 let openRouterModelsCache: Model[] | null = null;

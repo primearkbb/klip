@@ -62,6 +62,15 @@ export async function withRetry<T>(
 export function isRetryableError(error: Error): boolean {
   const message = error.message.toLowerCase();
   
+  // Don't retry 400-level errors (client errors)
+  if (message.includes('400') || // Bad Request
+      message.includes('401') || // Unauthorized
+      message.includes('403') || // Forbidden
+      message.includes('404') || // Not Found
+      message.includes('422')) { // Unprocessable Entity
+    return false;
+  }
+  
   // Network errors
   if (message.includes('network') || 
       message.includes('connection') || 
