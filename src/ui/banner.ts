@@ -27,19 +27,19 @@ export function displayBanner(): void {
   const emptyLine = '│' + ' '.repeat(minWidth) + '│';
 
   const banner = `
-${colors.magenta(topBorder)}
-${colors.magenta(emptyLine)}
-${colors.magenta('│')}${' '.repeat(padding)}${colors.brightCyan(brandLine)}${
+  ${colors.magenta(topBorder)}
+  ${colors.magenta(emptyLine)}
+  ${colors.magenta('│')}${' '.repeat(padding)}${colors.brightCyan(brandLine)}${
     ' '.repeat(minWidth - padding - brandLine.length)
   }${colors.magenta('│')}
-${colors.magenta(emptyLine)}
-${colors.magenta('│')}${' '.repeat(tagPadding)}${colors.brightGreen(tagLine)}${
-    ' '.repeat(minWidth - tagPadding - tagLine.length)
-  }${colors.magenta('│')}
-${colors.magenta(emptyLine)}
-${colors.magenta(bottomBorder)}
+  ${colors.magenta(emptyLine)}
+  ${colors.magenta('│')}${' '.repeat(tagPadding)}${
+    colors.brightGreen(tagLine)
+  }${' '.repeat(minWidth - tagPadding - tagLine.length)}${colors.magenta('│')}
+  ${colors.magenta(emptyLine)}
+  ${colors.magenta(bottomBorder)}
 
-${colors.dim(' '.repeat(helpPadding) + helpLine)}
+  ${colors.dim(' '.repeat(helpPadding) + helpLine)}
 `;
 
   console.log(banner);
@@ -47,27 +47,27 @@ ${colors.dim(' '.repeat(helpPadding) + helpLine)}
 
 export function displayHelp(): void {
   const help = `
-${colors.brightBlue('Available Commands:')}
+  ${colors.brightBlue('Available Commands:')}
 
-${colors.green('  /help')}      - Show this help message
-${colors.green('  /models')}    - List available models
-${colors.green('  /model')}     - Switch to a different model
-${colors.green('  /clear')}     - Clear the chat history
-${colors.green('  /keys')}      - Manage API keys
-${colors.green('  /edit')}      - Edit and resend last message
-${colors.green('  /quit')}      - Exit the application
+  ${colors.green('  /help')}      - Show this help message
+  ${colors.green('  /models')}    - List available models
+  ${colors.green('  /model')}     - Switch to a different model
+  ${colors.green('  /clear')}     - Clear the chat history
+  ${colors.green('  /keys')}      - Manage API keys
+  ${colors.green('  /edit')}      - Edit and resend last message
+  ${colors.green('  /quit')}      - Exit the application
 
-${colors.brightBlue('Shortcuts:')}
+  ${colors.brightBlue('Shortcuts:')}
 
-${colors.yellow('  Ctrl+C')}    - Exit the application
-${colors.yellow('  Ctrl+D')}    - Send message (when typing)
-${colors.yellow('  Ctrl+L')}    - Clear screen
-${colors.yellow('  ↑/↓')}       - Navigate message history
+  ${colors.yellow('  Ctrl+C')}    - Exit the application
+  ${colors.yellow('  Ctrl+D')}    - Send message (when typing)
+  ${colors.yellow('  Ctrl+L')}    - Clear screen
+  ${colors.yellow('  ↑/↓')}       - Navigate message history
 
-${colors.brightBlue('Usage:')}
+  ${colors.brightBlue('Usage:')}
 
-  Just type your message and press Enter or Ctrl+D to send it.
-  Use the commands above to control the chat behavior.
+    Just type your message and press Enter or Ctrl+D to send it.
+    Use the commands above to control the chat behavior.
 `;
 
   console.log(help);

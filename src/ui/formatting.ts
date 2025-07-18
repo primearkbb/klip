@@ -5,6 +5,8 @@ export interface FormatOptions {
   maxWidth?: number;
   wrapCode?: boolean;
   showLineNumbers?: boolean;
+  leftMargin?: number;
+  messageType?: 'user' | 'assistant' | 'thinking';
 }
 
 export class ResponseFormatter {
@@ -12,12 +14,17 @@ export class ResponseFormatter {
   private maxWidth: number;
   private wrapCode: boolean;
   private showLineNumbers: boolean;
+  private leftMargin: number;
+  private messageType: 'user' | 'assistant' | 'thinking';
 
   constructor(options: FormatOptions = {}) {
     this.indentSize = options.indentSize ?? 4;
-    this.maxWidth = options.maxWidth ?? (this.getTerminalWidth() - 8);
+    this.leftMargin = options.leftMargin ?? 2;
+    this.maxWidth = options.maxWidth ??
+      (this.getTerminalWidth() - this.leftMargin - 8);
     this.wrapCode = options.wrapCode ?? false;
     this.showLineNumbers = options.showLineNumbers ?? false;
+    this.messageType = options.messageType ?? 'assistant';
   }
 
   private getTerminalWidth(): number {
@@ -25,6 +32,22 @@ export class ResponseFormatter {
       return Deno.consoleSize().columns;
     }
     return 80; // fallback
+  }
+
+  private getLeftMargin(): string {
+    return ' '.repeat(this.leftMargin);
+  }
+
+  private getGutter(): string {
+    switch (this.messageType) {
+      case 'user':
+        return colors.brightBlue('│');
+      case 'thinking':
+        return colors.dim('┊');
+      case 'assistant':
+      default:
+        return colors.dim('│');
+    }
   }
 
   formatResponse(content: string): string {
@@ -97,27 +120,35 @@ export class ResponseFormatter {
 
   private formatHeading(text: string, level: number): string {
     const content = text.replace(/^#+\s*/, '');
-    const gutter = colors.dim('│');
+    const leftMargin = this.getLeftMargin();
+    const gutter = this.getGutter();
     const indent = ' '.repeat(this.indentSize);
 
     switch (level) {
       case 1:
-        return `${gutter}${indent}${colors.bold(colors.brightBlue(content))}`;
+        return `${leftMargin}${gutter}${indent}${
+          colors.bold(colors.brightBlue(content))
+        }`;
       case 2:
-        return `${gutter}${indent}${colors.bold(colors.blue(content))}`;
+        return `${leftMargin}${gutter}${indent}${
+          colors.bold(colors.blue(content))
+        }`;
       case 3:
-        return `${gutter}${indent}${colors.bold(colors.cyan(content))}`;
+        return `${leftMargin}${gutter}${indent}${
+          colors.bold(colors.cyan(content))
+        }`;
       default:
-        return `${gutter}${indent}${colors.bold(content)}`;
+        return `${leftMargin}${gutter}${indent}${colors.bold(content)}`;
     }
   }
 
   private formatListItem(text: string, depth: number): string {
     const content = text.replace(/^[-*]\s*/, '');
-    const gutter = colors.dim('│');
+    const leftMargin = this.getLeftMargin();
+    const gutter = this.getGutter();
     const indent = ' '.repeat(this.indentSize + depth * 2);
     const bullet = colors.cyan('•');
-    return `${gutter}${indent}${bullet} ${content}`;
+    return `${leftMargin}${gutter}${indent}${bullet} ${content}`;
   }
 
   private formatOrderedListItem(text: string, depth: number): string {
@@ -125,44 +156,54 @@ export class ResponseFormatter {
     if (!match) return text;
 
     const [, number, content] = match;
+    const leftMargin = this.getLeftMargin();
+    const gutter = this.getGutter();
     const indent = ' '.repeat(this.indentSize + depth * 2);
-    return `${indent}${colors.cyan(number + '.')} ${content}`;
+    return `${leftMargin}${gutter}${indent}${
+      colors.cyan(number + '.')
+    } ${content}`;
   }
 
   private formatBlockquote(text: string): string {
     const content = text.replace(/^>\s*/, '');
+    const leftMargin = this.getLeftMargin();
     const indent = ' '.repeat(this.indentSize);
-    return `${indent}${colors.dim('│')} ${colors.dim(content)}`;
+    return `${leftMargin}${indent}${colors.dim('│')} ${colors.dim(content)}`;
   }
 
   private formatInlineCode(text: string): string {
+    const leftMargin = this.getLeftMargin();
+    const gutter = this.getGutter();
     const indent = ' '.repeat(this.indentSize);
-    return `${indent}${
+    return `${leftMargin}${gutter}${indent}${
       text.replace(/`([^`]+)`/g, colors.bgBlack(colors.brightWhite(' $1 ')))
     }`;
   }
 
   private formatCodeBlock(lines: string[], language: string): string {
+    const leftMargin = this.getLeftMargin();
     const indent = ' '.repeat(this.indentSize);
+    const availableWidth = this.maxWidth - this.leftMargin - this.indentSize;
+
     const header = language
-      ? `${indent}${colors.dim('┌─')} ${colors.cyan(language)} ${
+      ? `${leftMargin}${indent}${colors.dim('┌─')} ${colors.cyan(language)} ${
         colors.dim(
-          '─'.repeat(Math.max(0, this.maxWidth - language.length - 10)),
+          '─'.repeat(Math.max(0, availableWidth - language.length - 10)),
         )
       }`
-      : `${indent}${
-        colors.dim('┌' + '─'.repeat(Math.max(0, this.maxWidth - 6)))
+      : `${leftMargin}${indent}${
+        colors.dim('┌' + '─'.repeat(Math.max(0, availableWidth - 6)))
       }`;
 
-    const footer = `${indent}${
-      colors.dim('└' + '─'.repeat(Math.max(0, this.maxWidth - 6)))
+    const footer = `${leftMargin}${indent}${
+      colors.dim('└' + '─'.repeat(Math.max(0, availableWidth - 6)))
     }`;
 
     const formattedLines = lines.map((line, i) => {
       const lineNumber = this.showLineNumbers
         ? colors.dim((i + 1).toString().padStart(3) + ' │ ')
         : '';
-      return `${indent}${colors.dim('│')} ${lineNumber}${
+      return `${leftMargin}${indent}${colors.dim('│')} ${lineNumber}${
         colors.brightWhite(line)
       }`;
     });
@@ -171,7 +212,8 @@ export class ResponseFormatter {
   }
 
   private formatParagraph(text: string): string {
-    const gutter = colors.dim('│');
+    const leftMargin = this.getLeftMargin();
+    const gutter = this.getGutter();
     const indent = ' '.repeat(this.indentSize);
 
     // Handle inline formatting
@@ -180,61 +222,148 @@ export class ResponseFormatter {
       .replace(/\*(.*?)\*/g, colors.italic('$1'))
       .replace(/`([^`]+)`/g, colors.bgBlack(colors.brightWhite(' $1 ')));
 
+    // Calculate available width for text
+    const availableWidth = this.maxWidth - this.leftMargin - this.indentSize -
+      2; // 2 for gutter
+
     // Word wrap if needed
-    if (formatted.length > this.maxWidth - this.indentSize) {
-      const words = formatted.split(' ');
-      const wrapped: string[] = [];
-      let currentLine = '';
-
-      for (const word of words) {
-        if ((currentLine + word).length > this.maxWidth - this.indentSize) {
-          if (currentLine) {
-            wrapped.push(currentLine.trim());
-            currentLine = word + ' ';
-          } else {
-            wrapped.push(word);
-          }
-        } else {
-          currentLine += word + ' ';
-        }
-      }
-
-      if (currentLine.trim()) {
-        wrapped.push(currentLine.trim());
-      }
-
-      return wrapped.map((line) => `${gutter}${indent}${line}`).join('\n');
+    if (this.getTextLength(formatted) > availableWidth) {
+      const wrapped = this.wrapWords(formatted, availableWidth);
+      return wrapped.map((line) => `${leftMargin}${gutter}${indent}${line}`)
+        .join('\n');
     }
 
-    return `${gutter}${indent}${formatted}`;
+    return `${leftMargin}${gutter}${indent}${formatted}`;
+  }
+
+  private getTextLength(text: string): number {
+    // Remove ANSI escape codes to get actual text length
+    return text.replace(/\x1b\[[0-9;]*m/g, '').length;
+  }
+
+  private wrapWords(text: string, maxWidth: number): string[] {
+    const words = text.split(' ');
+    const wrapped: string[] = [];
+    let currentLine = '';
+
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+
+      if (this.getTextLength(testLine) > maxWidth) {
+        if (currentLine) {
+          wrapped.push(currentLine);
+          currentLine = word;
+        } else {
+          // Word is too long, break it up
+          const chunks = this.breakLongWord(word, maxWidth);
+          wrapped.push(...chunks.slice(0, -1));
+          currentLine = chunks[chunks.length - 1];
+        }
+      } else {
+        currentLine = testLine;
+      }
+    }
+
+    if (currentLine) {
+      wrapped.push(currentLine);
+    }
+
+    return wrapped;
+  }
+
+  private breakLongWord(word: string, maxWidth: number): string[] {
+    const chunks: string[] = [];
+    let remaining = word;
+
+    while (this.getTextLength(remaining) > maxWidth) {
+      let chunk = '';
+      let i = 0;
+
+      while (
+        i < remaining.length &&
+        this.getTextLength(chunk + remaining[i]) <= maxWidth
+      ) {
+        chunk += remaining[i];
+        i++;
+      }
+
+      if (chunk) {
+        chunks.push(chunk);
+        remaining = remaining.slice(i);
+      } else {
+        // Single character is too wide, just take it
+        chunks.push(remaining[0]);
+        remaining = remaining.slice(1);
+      }
+    }
+
+    if (remaining) {
+      chunks.push(remaining);
+    }
+
+    return chunks;
   }
 
   updateMaxWidth(width: number): void {
     this.maxWidth = width;
   }
+
+  setMessageType(type: 'user' | 'assistant' | 'thinking'): void {
+    this.messageType = type;
+  }
+}
+
+// Helper functions for message formatting
+export function formatUserMessage(content: string): string {
+  const formatter = new ResponseFormatter({ messageType: 'user' });
+  return formatter.formatResponse(content);
+}
+
+export function formatAssistantMessage(content: string): string {
+  const formatter = new ResponseFormatter({ messageType: 'assistant' });
+  return formatter.formatResponse(content);
+}
+
+export function formatThinkingMessage(content: string): string {
+  const formatter = new ResponseFormatter({ messageType: 'thinking' });
+  const leftMargin = '  ';
+  const lines = content.split('\n');
+  const formattedLines = lines.map((line) => {
+    if (line.trim()) {
+      return `${leftMargin}${colors.dim('┊')} ${colors.dim(line)}`;
+    }
+    return '';
+  });
+  return formattedLines.join('\n');
 }
 
 export class StreamingFormatter {
   private buffer: string = '';
   private formatter: ResponseFormatter;
   private currentLine: string = '';
+  private options: FormatOptions;
 
   constructor(options: FormatOptions = {}) {
+    this.options = options;
     this.formatter = new ResponseFormatter(options);
   }
 
   addChunk(chunk: string): string {
     this.buffer += chunk;
 
-    // Process complete lines
+    // For streaming, we want to format each chunk as it comes
+    // but only return complete formatted lines
     const lines = this.buffer.split('\n');
+
     if (lines.length > 1) {
       // Keep the last incomplete line in buffer
       this.buffer = lines.pop() || '';
 
-      // Process complete lines
+      // Format and return complete lines
       const completedContent = lines.join('\n');
-      return this.formatter.formatResponse(completedContent);
+      if (completedContent.trim()) {
+        return this.formatter.formatResponse(completedContent);
+      }
     }
 
     return '';
@@ -247,6 +376,29 @@ export class StreamingFormatter {
       return final;
     }
     return '';
+  }
+
+  setMessageType(type: 'user' | 'assistant' | 'thinking'): void {
+    this.formatter.setMessageType(type);
+  }
+
+  // Check if current buffer contains thinking tags
+  private detectThinkingContent(): boolean {
+    const content = this.buffer.toLowerCase();
+    return content.includes('<thinking>') || content.includes('<think>') ||
+      content.includes('<thinking>');
+  }
+
+  // Handle thinking message formatting
+  processThinkingContent(content: string): string {
+    // Simple thinking content detection and formatting
+    if (
+      content.includes('<thinking>') || content.includes('<think>') ||
+      content.includes('<thinking>')
+    ) {
+      return formatThinkingMessage(content);
+    }
+    return this.formatter.formatResponse(content);
   }
 
   reset(): void {
