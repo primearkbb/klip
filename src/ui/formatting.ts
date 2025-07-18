@@ -411,8 +411,8 @@ export class StreamingFormatter {
       // Keep the last incomplete line in buffer
       this.buffer = lines.pop() || '';
       
-      // Format complete lines
-      const completedContent = lines.join(' ');
+      // Format complete lines, preserving original line breaks
+      const completedContent = lines.join('\n');
       if (completedContent.trim()) {
         const result = this.formatContent(completedContent);
         return result;
@@ -442,8 +442,7 @@ export class StreamingFormatter {
         if (hasMultipleLines || willWrap) {
           // Multiline format: header + label on own line, then content
           result = header + label + '\n';
-          const wrappedLines = this.wrapText(content, this.baseIndent, this.baseIndent);
-          result += wrappedLines.join('\n');
+          result += this.formatMultilineContent(content);
         } else {
           // Single line format: header + label + content
           result = header + label + content;
@@ -451,17 +450,33 @@ export class StreamingFormatter {
       } else {
         // For assistant messages, header + label on its own line
         result = header + label + '\n';
-        const wrappedLines = this.wrapText(content, this.baseIndent, this.baseIndent);
-        result += wrappedLines.join('\n');
+        result += this.formatMultilineContent(content);
       }
       this.isFirstChunk = false;
     } else {
       // Continuation content without speaker header
-      const wrappedLines = this.wrapText(content, this.baseIndent, this.baseIndent);
-      result = wrappedLines.join('\n');
+      result = this.formatMultilineContent(content);
     }
     
     return result + '\n';
+  }
+
+  private formatMultilineContent(content: string): string {
+    const lines = content.split('\n');
+    const formattedLines: string[] = [];
+    
+    for (const line of lines) {
+      if (line.trim() === '') {
+        // Preserve empty lines for spacing
+        formattedLines.push('');
+      } else {
+        // Apply indentation and wrapping to non-empty lines
+        const wrappedLines = this.wrapText(line, this.baseIndent, this.baseIndent);
+        formattedLines.push(...wrappedLines);
+      }
+    }
+    
+    return formattedLines.join('\n');
   }
 
   finalize(): string {
