@@ -6,7 +6,7 @@ import { displayBanner } from './ui/banner.ts';
 async function main() {
   try {
     displayBanner();
-    
+
     const app = new App();
     await app.run();
   } catch (error) {
