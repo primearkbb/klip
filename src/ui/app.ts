@@ -40,26 +40,26 @@ export class App {
   async run(): Promise<void> {
     this.setupSignalHandlers();
 
-    await withSpinner('Initializing keystore...', () => this.keyStore.init(), {
-      successMessage: 'Keystore initialized',
-    });
+    console.log(colors.dim('Initializing Klip...\n'));
 
-    await withSpinner('Setting up chat logger...', () => this.logger.init(), {
-      successMessage: 'Chat logger ready',
-    });
+    console.log(colors.dim('1. Setting up keystore...'));
+    await this.keyStore.init();
+    console.log(colors.green('✓ Keystore initialized'));
 
-    // Check for API key
+    console.log(colors.dim('2. Setting up chat logger...'));
+    await this.logger.init();
+    console.log(colors.green('✓ Chat logger ready'));
+
+    console.log(colors.dim('3. Checking API credentials...'));
     if (!(await this.keyStore.hasKey(this.currentModel.provider))) {
       await this.setupApiKey(this.currentModel.provider);
+    } else {
+      console.log(colors.green('✓ API credentials found'));
     }
 
-    await withSpinner(
-      'Initializing API client...',
-      () => this.initializeClient(),
-      {
-        successMessage: 'API client ready',
-      },
-    );
+    console.log(colors.dim('4. Initializing API client...'));
+    await this.initializeClient();
+    console.log(colors.green('✓ API client ready'));
 
     console.log(colors.green(`\n✓ Using model: ${this.currentModel.name}`));
     console.log(colors.dim('Type /help for commands or start chatting!\n'));
@@ -180,7 +180,7 @@ export class App {
             // Stop spinner on first chunk
             if (firstChunk) {
               connectingSpinner.stop();
-              console.log(colors.brightGreen('A: '));
+              console.log(colors.brightGreen('Klip: '));
               firstChunk = false;
             }
 
