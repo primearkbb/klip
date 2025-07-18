@@ -2,13 +2,18 @@ import { colors } from '@cliffy/ansi/colors';
 
 export class Spinner {
   private frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  private klipFrames = ['🤖', '🔍', '💭', '⚡', '🧠', '✨', '🎯', '🚀'];
   private interval: number | null = null;
   private currentFrame = 0;
   private message: string;
   private isRunning = false;
+  private useKlipAnimation = false;
+  private prefix = '';
 
-  constructor(message: string) {
+  constructor(message: string, options: { useKlipAnimation?: boolean; prefix?: string } = {}) {
     this.message = message;
+    this.useKlipAnimation = options.useKlipAnimation || false;
+    this.prefix = options.prefix || '';
   }
 
   start(): void {
@@ -69,8 +74,10 @@ export class Spinner {
   }
 
   private render(): void {
-    const frame = this.frames[this.currentFrame];
-    const output = `\r${colors.cyan(frame)} ${colors.dim(this.message)}`;
+    const frames = this.useKlipAnimation ? this.klipFrames : this.frames;
+    const frame = frames[this.currentFrame % frames.length];
+    const spinner = this.useKlipAnimation ? frame : colors.cyan(frame);
+    const output = `\r${this.prefix}${spinner} ${colors.dim(this.message)}`;
     Deno.stdout.write(new TextEncoder().encode(output));
   }
 }
