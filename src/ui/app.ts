@@ -181,11 +181,7 @@ export class App {
 
     this.messages.push(userMessage);
 
-    // Display user message with proper formatting
-    const userFormatter = new ResponseFormatter({ messageType: 'user' });
-    const formattedUserMessage = userFormatter.formatResponse(content);
-    console.log(colors.brightBlue('\n  You:'));
-    console.log(formattedUserMessage);
+    // Just add some spacing before the response (user input already visible)
     console.log();
 
     this.interruptibleOp = new InterruptibleOperation<string>();
@@ -194,10 +190,11 @@ export class App {
       const request: ChatRequest = {
         model: this.currentModel,
         messages: this.messages,
+        enableWebSearch: true,
       };
 
       // Show a brief connecting message
-      const connectingSpinner = new Spinner('Connecting to API...');
+      const connectingSpinner = new Spinner('Thinking...');
       connectingSpinner.start();
 
       const result = await this.interruptibleOp.execute(async (signal) => {
@@ -206,7 +203,6 @@ export class App {
         const streamingFormatter = new StreamingFormatter({
           messageType: 'assistant',
         });
-        let pendingOutput = '';
 
         if (this.client) {
           const streamGenerator = this.client.chatStream(request);
@@ -226,18 +222,7 @@ export class App {
             // Add chunk to formatter and get formatted output
             const formattedChunk = streamingFormatter.addChunk(chunk);
             if (formattedChunk) {
-              // Write pending output and this chunk
-              if (pendingOutput) {
-                Deno.stdout.write(new TextEncoder().encode(pendingOutput));
-                pendingOutput = '';
-              }
               Deno.stdout.write(new TextEncoder().encode(formattedChunk));
-              if (!formattedChunk.endsWith('\n')) {
-                Deno.stdout.write(new TextEncoder().encode('\n'));
-              }
-            } else {
-              // Store this chunk for later if no formatted output yet
-              pendingOutput += chunk;
             }
 
             assistantContent += chunk;
@@ -246,23 +231,7 @@ export class App {
           // Finalize any remaining content
           const finalFormatted = streamingFormatter.finalize();
           if (finalFormatted) {
-            if (pendingOutput) {
-              Deno.stdout.write(new TextEncoder().encode(pendingOutput));
-            }
             Deno.stdout.write(new TextEncoder().encode(finalFormatted));
-            if (!finalFormatted.endsWith('\n')) {
-              Deno.stdout.write(new TextEncoder().encode('\n'));
-            }
-          } else if (pendingOutput) {
-            // Format any remaining pending output
-            const finalFormatter = new ResponseFormatter({
-              messageType: 'assistant',
-            });
-            const formatted = finalFormatter.formatResponse(pendingOutput);
-            Deno.stdout.write(new TextEncoder().encode(formatted));
-            if (!formatted.endsWith('\n')) {
-              Deno.stdout.write(new TextEncoder().encode('\n'));
-            }
           }
         }
 

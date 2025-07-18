@@ -315,55 +315,92 @@ export class ResponseFormatter {
 
 // Helper functions for message formatting
 export function formatUserMessage(content: string): string {
-  const formatter = new ResponseFormatter({ messageType: 'user' });
-  return formatter.formatResponse(content);
+  const decorator = colors.brightBlue('>');
+  const gutter = colors.dim('│');
+  const indent = '  ';
+  
+  const lines = content.split('\n');
+  const formattedLines = lines.map(line => {
+    if (line.trim() === '') return '';
+    return `${decorator} ${gutter} ${indent}${line}`;
+  });
+  
+  return formattedLines.join('\n');
 }
 
 export function formatAssistantMessage(content: string): string {
-  const formatter = new ResponseFormatter({ messageType: 'assistant' });
-  return formatter.formatResponse(content);
+  const decorator = colors.dim('•');
+  const gutter = colors.dim('│');
+  const indent = '  ';
+  
+  const lines = content.split('\n');
+  const formattedLines = lines.map(line => {
+    if (line.trim() === '') return '';
+    return `${decorator} ${gutter} ${indent}${line}`;
+  });
+  
+  return formattedLines.join('\n');
 }
 
 export function formatThinkingMessage(content: string): string {
-  const formatter = new ResponseFormatter({ messageType: 'thinking' });
-  const leftMargin = '  ';
+  const decorator = colors.dim('~');
+  const gutter = colors.dim('┊');
+  const indent = '  ';
+  
   const lines = content.split('\n');
-  const formattedLines = lines.map((line) => {
-    if (line.trim()) {
-      return `${leftMargin}${colors.dim('┊')} ${colors.dim(line)}`;
-    }
-    return '';
+  const formattedLines = lines.map(line => {
+    if (line.trim() === '') return '';
+    return `${decorator} ${gutter} ${indent}${colors.dim(line)}`;
   });
+  
   return formattedLines.join('\n');
 }
 
 export class StreamingFormatter {
   private buffer: string = '';
-  private formatter: ResponseFormatter;
-  private currentLine: string = '';
-  private options: FormatOptions;
+  private messageType: 'user' | 'assistant' | 'thinking' = 'assistant';
+  private decorator: string = '';
+  private gutter: string = colors.dim('│');
+  private indent: string = '  ';
 
   constructor(options: FormatOptions = {}) {
-    this.options = options;
-    this.formatter = new ResponseFormatter(options);
+    this.messageType = options.messageType ?? 'assistant';
+    this.updateFormatting();
+  }
+
+  private updateFormatting(): void {
+    switch (this.messageType) {
+      case 'user':
+        this.decorator = colors.brightBlue('>');
+        this.gutter = colors.dim('│');
+        break;
+      case 'thinking':
+        this.decorator = colors.dim('~');
+        this.gutter = colors.dim('┊');
+        break;
+      case 'assistant':
+      default:
+        this.decorator = colors.dim('•');
+        this.gutter = colors.dim('│');
+        break;
+    }
   }
 
   addChunk(chunk: string): string {
     this.buffer += chunk;
-
-    // For streaming, we want to format each chunk as it comes
-    // but only return complete formatted lines
     const lines = this.buffer.split('\n');
-
+    
     if (lines.length > 1) {
       // Keep the last incomplete line in buffer
       this.buffer = lines.pop() || '';
-
-      // Format and return complete lines
-      const completedContent = lines.join('\n');
-      if (completedContent.trim()) {
-        return this.formatter.formatResponse(completedContent);
-      }
+      
+      // Format complete lines with decorator and gutter
+      const formattedLines = lines.map(line => {
+        if (line.trim() === '') return '';
+        return `${this.decorator} ${this.gutter} ${this.indent}${line}`;
+      });
+      
+      return formattedLines.join('\n') + (formattedLines.length > 0 ? '\n' : '');
     }
 
     return '';
@@ -371,7 +408,7 @@ export class StreamingFormatter {
 
   finalize(): string {
     if (this.buffer.trim()) {
-      const final = this.formatter.formatResponse(this.buffer);
+      const final = `${this.decorator} ${this.gutter} ${this.indent}${this.buffer}`;
       this.buffer = '';
       return final;
     }
@@ -379,30 +416,11 @@ export class StreamingFormatter {
   }
 
   setMessageType(type: 'user' | 'assistant' | 'thinking'): void {
-    this.formatter.setMessageType(type);
-  }
-
-  // Check if current buffer contains thinking tags
-  private detectThinkingContent(): boolean {
-    const content = this.buffer.toLowerCase();
-    return content.includes('<thinking>') || content.includes('<think>') ||
-      content.includes('<thinking>');
-  }
-
-  // Handle thinking message formatting
-  processThinkingContent(content: string): string {
-    // Simple thinking content detection and formatting
-    if (
-      content.includes('<thinking>') || content.includes('<think>') ||
-      content.includes('<thinking>')
-    ) {
-      return formatThinkingMessage(content);
-    }
-    return this.formatter.formatResponse(content);
+    this.messageType = type;
+    this.updateFormatting();
   }
 
   reset(): void {
     this.buffer = '';
-    this.currentLine = '';
   }
 }
