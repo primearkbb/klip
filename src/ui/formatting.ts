@@ -14,8 +14,8 @@ export class ResponseFormatter {
   private showLineNumbers: boolean;
 
   constructor(options: FormatOptions = {}) {
-    this.indentSize = options.indentSize ?? 2;
-    this.maxWidth = options.maxWidth ?? (this.getTerminalWidth() - 4);
+    this.indentSize = options.indentSize ?? 4;
+    this.maxWidth = options.maxWidth ?? (this.getTerminalWidth() - 8);
     this.wrapCode = options.wrapCode ?? false;
     this.showLineNumbers = options.showLineNumbers ?? false;
   }
@@ -97,25 +97,27 @@ export class ResponseFormatter {
 
   private formatHeading(text: string, level: number): string {
     const content = text.replace(/^#+\s*/, '');
+    const gutter = colors.dim('│');
     const indent = ' '.repeat(this.indentSize);
 
     switch (level) {
       case 1:
-        return `${indent}${colors.bold(colors.brightBlue(content))}`;
+        return `${gutter}${indent}${colors.bold(colors.brightBlue(content))}`;
       case 2:
-        return `${indent}${colors.bold(colors.blue(content))}`;
+        return `${gutter}${indent}${colors.bold(colors.blue(content))}`;
       case 3:
-        return `${indent}${colors.bold(colors.cyan(content))}`;
+        return `${gutter}${indent}${colors.bold(colors.cyan(content))}`;
       default:
-        return `${indent}${colors.bold(content)}`;
+        return `${gutter}${indent}${colors.bold(content)}`;
     }
   }
 
   private formatListItem(text: string, depth: number): string {
     const content = text.replace(/^[-*]\s*/, '');
+    const gutter = colors.dim('│');
     const indent = ' '.repeat(this.indentSize + depth * 2);
     const bullet = colors.cyan('•');
-    return `${indent}${bullet} ${content}`;
+    return `${gutter}${indent}${bullet} ${content}`;
   }
 
   private formatOrderedListItem(text: string, depth: number): string {
@@ -169,6 +171,7 @@ export class ResponseFormatter {
   }
 
   private formatParagraph(text: string): string {
+    const gutter = colors.dim('│');
     const indent = ' '.repeat(this.indentSize);
 
     // Handle inline formatting
@@ -200,10 +203,10 @@ export class ResponseFormatter {
         wrapped.push(currentLine.trim());
       }
 
-      return wrapped.map((line) => `${indent}${line}`).join('\n');
+      return wrapped.map((line) => `${gutter}${indent}${line}`).join('\n');
     }
 
-    return `${indent}${formatted}`;
+    return `${gutter}${indent}${formatted}`;
   }
 
   updateMaxWidth(width: number): void {
