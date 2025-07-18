@@ -18,6 +18,7 @@ export interface ChatRequest {
   maxTokens?: number;
   temperature?: number;
   stream?: boolean;
+  enableWebSearch?: boolean;
 }
 
 export interface ChatResponse {
@@ -321,6 +322,15 @@ export class ApiClient {
 
       if (request.stream) {
         payload.stream = true;
+      }
+
+      // Add web search tool if enabled
+      if (request.enableWebSearch) {
+        payload.tools = [{
+          type: 'web_search_20250305',
+          name: 'web_search',
+          max_uses: 5
+        }];
       }
 
       return payload;
