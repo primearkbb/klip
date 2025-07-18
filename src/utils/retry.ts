@@ -9,7 +9,11 @@ export interface RetryOptions {
 }
 
 export class RetryError extends Error {
-  constructor(message: string, public readonly attempts: number, public readonly lastError: Error) {
+  constructor(
+    message: string,
+    public readonly attempts: number,
+    public readonly lastError: Error,
+  ) {
     super(message);
     this.name = 'RetryError';
   }
@@ -17,14 +21,14 @@ export class RetryError extends Error {
 
 export async function withRetry<T>(
   operation: () => Promise<T>,
-  options: RetryOptions = {}
+  options: RetryOptions = {},
 ): Promise<T> {
   const {
     maxRetries = 3,
     baseDelay = 1000,
     maxDelay = 30000,
     backoffFactor = 2,
-    retryCondition = (error) => isRetryableError(error)
+    retryCondition = (error) => isRetryableError(error),
   } = options;
 
   let lastError: Error;
@@ -35,12 +39,12 @@ export async function withRetry<T>(
       return await operation();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (attempt === maxRetries) {
         throw new RetryError(
           `Operation failed after ${attempt + 1} attempts`,
           attempt + 1,
-          lastError
+          lastError,
         );
       }
 
@@ -48,9 +52,15 @@ export async function withRetry<T>(
         throw lastError;
       }
 
-      console.log(colors.yellow(`\nRetrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries + 1})`));
+      console.log(
+        colors.yellow(
+          `\nRetrying in ${delay}ms... (attempt ${attempt + 1}/${
+            maxRetries + 1
+          })`,
+        ),
+      );
       console.log(colors.dim(`Error: ${lastError.message}`));
-      
+
       await sleep(delay);
       delay = Math.min(delay * backoffFactor, maxDelay);
     }
@@ -61,46 +71,54 @@ export async function withRetry<T>(
 
 export function isRetryableError(error: Error): boolean {
   const message = error.message.toLowerCase();
-  
+
   // Don't retry 400-level errors (client errors)
-  if (message.includes('400') || // Bad Request
-      message.includes('401') || // Unauthorized
-      message.includes('403') || // Forbidden
-      message.includes('404') || // Not Found
-      message.includes('422')) { // Unprocessable Entity
+  if (
+    message.includes('400') || // Bad Request
+    message.includes('401') || // Unauthorized
+    message.includes('403') || // Forbidden
+    message.includes('404') || // Not Found
+    message.includes('422')
+  ) { // Unprocessable Entity
     return false;
   }
-  
+
   // Network errors
-  if (message.includes('network') || 
-      message.includes('connection') || 
-      message.includes('timeout') ||
-      message.includes('econnreset') ||
-      message.includes('enotfound')) {
+  if (
+    message.includes('network') ||
+    message.includes('connection') ||
+    message.includes('timeout') ||
+    message.includes('econnreset') ||
+    message.includes('enotfound')
+  ) {
     return true;
   }
-  
+
   // HTTP status codes that should be retried
-  if (message.includes('500') || // Internal Server Error
-      message.includes('502') || // Bad Gateway
-      message.includes('503') || // Service Unavailable
-      message.includes('504') || // Gateway Timeout
-      message.includes('429')) { // Rate Limited
+  if (
+    message.includes('500') || // Internal Server Error
+    message.includes('502') || // Bad Gateway
+    message.includes('503') || // Service Unavailable
+    message.includes('504') || // Gateway Timeout
+    message.includes('429')
+  ) { // Rate Limited
     return true;
   }
-  
+
   // API-specific errors
-  if (message.includes('rate limit') ||
-      message.includes('overloaded') ||
-      message.includes('temporarily unavailable')) {
+  if (
+    message.includes('rate limit') ||
+    message.includes('overloaded') ||
+    message.includes('temporarily unavailable')
+  ) {
     return true;
   }
-  
+
   return false;
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export class InterruptibleOperation<T> {
@@ -119,7 +137,7 @@ export class InterruptibleOperation<T> {
 
     // Handle Ctrl+C
     Deno.addSignalListener('SIGINT', handleSignal);
-    
+
     // Handle termination
     Deno.addSignalListener('SIGTERM', handleSignal);
   }
@@ -137,7 +155,9 @@ export class InterruptibleOperation<T> {
     return this.abortController.signal;
   }
 
-  async execute(operation: (signal: AbortSignal) => Promise<T>): Promise<T | null> {
+  async execute(
+    operation: (signal: AbortSignal) => Promise<T>,
+  ): Promise<T | null> {
     try {
       return await operation(this.abortController.signal);
     } catch (error) {

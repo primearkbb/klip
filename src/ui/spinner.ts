@@ -13,10 +13,10 @@ export class Spinner {
 
   start(): void {
     if (this.isRunning) return;
-    
+
     this.isRunning = true;
     this.render();
-    
+
     this.interval = setInterval(() => {
       this.currentFrame = (this.currentFrame + 1) % this.frames.length;
       this.render();
@@ -25,16 +25,16 @@ export class Spinner {
 
   stop(): void {
     if (!this.isRunning) return;
-    
+
     this.isRunning = false;
-    
+
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
     }
-    
-    // Clear the spinner line
-    Deno.stdout.write(new TextEncoder().encode('\r\x1b[K'));
+
+    // Clear the spinner line completely
+    Deno.stdout.write(new TextEncoder().encode('\r\x1b[2K'));
   }
 
   succeed(message?: string): void {
@@ -107,10 +107,11 @@ export class ProgressBar {
     const percentage = Math.round((this.current / this.total) * 100);
     const filled = Math.round((this.current / this.total) * this.width);
     const empty = this.width - filled;
-    
-    const bar = colors.green('█'.repeat(filled)) + colors.dim('░'.repeat(empty));
+
+    const bar = colors.green('█'.repeat(filled)) +
+      colors.dim('░'.repeat(empty));
     const output = `\r${bar} ${percentage}% ${colors.dim(this.message)}`;
-    
+
     Deno.stdout.write(new TextEncoder().encode(output));
   }
 }
@@ -122,24 +123,27 @@ export async function withSpinner<T>(
     successMessage?: string;
     failureMessage?: string;
     timeout?: number;
-  } = {}
+  } = {},
 ): Promise<T> {
   const spinner = new Spinner(message);
   spinner.start();
-  
+
   try {
     let result: T;
-    
+
     if (options.timeout) {
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Operation timed out')), options.timeout);
+        setTimeout(
+          () => reject(new Error('Operation timed out')),
+          options.timeout,
+        );
       });
-      
+
       result = await Promise.race([operation(), timeoutPromise]);
     } else {
       result = await operation();
     }
-    
+
     spinner.succeed(options.successMessage);
     return result;
   } catch (error) {
@@ -150,5 +154,5 @@ export async function withSpinner<T>(
 }
 
 export function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

@@ -64,15 +64,21 @@ export class ApiClient {
     }
   }
 
-  async chat(request: ChatRequest): Promise<ChatResponse> {
+  async chat(
+    request: ChatRequest,
+    signal?: AbortSignal,
+  ): Promise<ChatResponse> {
     return withRetry(async () => {
       const payload = this.buildPayload(request);
-      
-      const endpoint = this.currentProvider === 'anthropic' ? '/messages' : '/chat/completions';
+
+      const endpoint = this.currentProvider === 'anthropic'
+        ? '/messages'
+        : '/chat/completions';
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: 'POST',
         headers: this.headers,
         body: JSON.stringify(payload),
+        signal: signal || undefined,
       });
 
       if (!response.ok) {
@@ -85,15 +91,25 @@ export class ApiClient {
     });
   }
 
-  async *chatStream(request: ChatRequest): AsyncGenerator<string, void, unknown> {
+  async *chatStream(
+    request: ChatRequest,
+    signal?: AbortSignal,
+  ): AsyncGenerator<string, void, unknown> {
+    const combinedSignal = signal
+      ? AbortSignal.any([signal, AbortSignal.timeout(120000)])
+      : AbortSignal.timeout(120000);
+
     const response = await withRetry(async () => {
       const payload = this.buildPayload({ ...request, stream: true });
-      
-      const endpoint = this.currentProvider === 'anthropic' ? '/messages' : '/chat/completions';
+
+      const endpoint = this.currentProvider === 'anthropic'
+        ? '/messages'
+        : '/chat/completions';
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: 'POST',
         headers: this.headers,
         body: JSON.stringify(payload),
+        signal: combinedSignal,
       });
 
       if (!response.ok) {
@@ -122,13 +138,16 @@ export class ApiClient {
         for (const line of lines) {
           const trimmed = line.trim();
           if (trimmed === '' || trimmed === 'data: [DONE]') continue;
-          
+
           if (trimmed.startsWith('data: ')) {
             try {
               const data = JSON.parse(trimmed.slice(6));
-              const content = this.extractStreamContent(data, request.model.provider);
+              const content = this.extractStreamContent(
+                data,
+                request.model.provider,
+              );
               if (content) yield content;
-            } catch (e) {
+            } catch (_e) {
               // Skip invalid JSON
             }
           }
@@ -139,28 +158,28 @@ export class ApiClient {
     }
   }
 
-  private buildPayload(request: ChatRequest): any {
+  private buildPayload(request: ChatRequest): Record<string, unknown> {
     if (request.model.provider === 'anthropic') {
-      const systemMessage = request.messages.find(m => m.role === 'system');
-      const otherMessages = request.messages.filter(m => m.role !== 'system');
-      
-      const payload: any = {
+      const systemMessage = request.messages.find((m) => m.role === 'system');
+      const otherMessages = request.messages.filter((m) => m.role !== 'system');
+
+      const payload: Record<string, unknown> = {
         model: request.model.id,
         max_tokens: request.maxTokens || request.model.maxTokens,
-        messages: otherMessages.map(m => ({
+        messages: otherMessages.map((m) => ({
           role: m.role,
           content: m.content,
         })),
       };
-      
+
       if (systemMessage?.content) {
         payload.system = systemMessage.content;
       }
-      
+
       if (request.stream) {
         payload.stream = true;
       }
-      
+
       return payload;
     } else {
       // OpenAI/OpenRouter format
@@ -169,7 +188,7 @@ export class ApiClient {
         max_tokens: request.maxTokens || request.model.maxTokens,
         temperature: request.temperature || 0.7,
         stream: request.stream || false,
-        messages: request.messages.map(m => ({
+        messages: request.messages.map((m) => ({
           role: m.role,
           content: m.content,
         })),
@@ -177,33 +196,43 @@ export class ApiClient {
     }
   }
 
-  private parseResponse(data: any, provider: string): ChatResponse {
+  private parseResponse(data: Record<string, unknown>, provider: string): ChatResponse {
     if (provider === 'anthropic') {
+      const content = (data.content as Array<{ text: string }>)?.[0]?.text || '';
+      const usage = data.usage as { input_tokens: number; output_tokens: number } | undefined;
       return {
-        content: data.content[0].text,
-        usage: data.usage ? {
-          inputTokens: data.usage.input_tokens,
-          outputTokens: data.usage.output_tokens,
-        } : undefined,
+        content,
+        usage: usage
+          ? {
+            inputTokens: usage.input_tokens,
+            outputTokens: usage.output_tokens,
+          }
+          : undefined,
       };
     } else {
       // OpenAI/OpenRouter format
+      const choices = (data.choices as Array<{ message: { content: string } }>)?.[0];
+      const usage = data.usage as { prompt_tokens: number; completion_tokens: number } | undefined;
       return {
-        content: data.choices[0].message.content,
-        usage: data.usage ? {
-          inputTokens: data.usage.prompt_tokens,
-          outputTokens: data.usage.completion_tokens,
-        } : undefined,
+        content: choices?.message?.content || '',
+        usage: usage
+          ? {
+            inputTokens: usage.prompt_tokens,
+            outputTokens: usage.completion_tokens,
+          }
+          : undefined,
       };
     }
   }
 
-  private extractStreamContent(data: any, provider: string): string | null {
+  private extractStreamContent(data: Record<string, unknown>, provider: string): string | null {
     if (provider === 'anthropic') {
-      return data.delta?.text || null;
+      const delta = data.delta as { text?: string } | undefined;
+      return delta?.text || null;
     } else {
       // OpenAI/OpenRouter format
-      return data.choices?.[0]?.delta?.content || null;
+      const choices = data.choices as Array<{ delta?: { content?: string } }> | undefined;
+      return choices?.[0]?.delta?.content || null;
     }
   }
 }

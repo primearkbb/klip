@@ -41,7 +41,7 @@ export const MODELS: Record<string, Model> = {
     maxTokens: 8192,
     contextWindow: 200000,
   },
-  
+
   // Anthropic Models - Claude 3.7 Series
   'claude-3-7-sonnet-20250219': {
     id: 'claude-3-7-sonnet-20250219',
@@ -50,7 +50,7 @@ export const MODELS: Record<string, Model> = {
     maxTokens: 8192,
     contextWindow: 200000,
   },
-  
+
   // Anthropic Models - Claude 3.5 Series
   'claude-3-5-sonnet-20241022': {
     id: 'claude-3-5-sonnet-20241022',
@@ -73,7 +73,7 @@ export const MODELS: Record<string, Model> = {
     maxTokens: 8192,
     contextWindow: 200000,
   },
-  
+
   // Anthropic Models - Claude 3 Series
   'claude-3-opus-20240229': {
     id: 'claude-3-opus-20240229',
@@ -172,8 +172,10 @@ export const MODELS: Record<string, Model> = {
   },
 };
 
-export function getModelsByProvider(provider: 'anthropic' | 'openai' | 'openrouter'): Model[] {
-  return Object.values(MODELS).filter(model => model.provider === provider);
+export function getModelsByProvider(
+  provider: 'anthropic' | 'openai' | 'openrouter',
+): Model[] {
+  return Object.values(MODELS).filter((model) => model.provider === provider);
 }
 
 export function getModel(id: string): Model | undefined {
@@ -194,9 +196,11 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 export async function fetchOpenRouterModels(): Promise<Model[]> {
   const now = Date.now();
-  
+
   // Return cached models if cache is still valid
-  if (openRouterModelsCache && (now - openRouterModelsCacheTime) < CACHE_DURATION) {
+  if (
+    openRouterModelsCache && (now - openRouterModelsCacheTime) < CACHE_DURATION
+  ) {
     return openRouterModelsCache;
   }
 
@@ -216,7 +220,9 @@ export async function fetchOpenRouterModels(): Promise<Model[]> {
     const openRouterModels: OpenRouterModel[] = data.data || [];
 
     // Convert OpenRouter models to our Model interface
-    const convertedModels: Model[] = openRouterModels.map((model: OpenRouterModel) => ({
+    const convertedModels: Model[] = openRouterModels.map((
+      model: OpenRouterModel,
+    ) => ({
       id: model.id,
       name: model.name,
       provider: 'openrouter' as const,
@@ -231,15 +237,19 @@ export async function fetchOpenRouterModels(): Promise<Model[]> {
     return convertedModels;
   } catch (error) {
     console.error('Error fetching OpenRouter models:', error);
-    
+
     // Fallback to static OpenRouter models if dynamic fetch fails
-    return Object.values(MODELS).filter(model => model.provider === 'openrouter');
+    return Object.values(MODELS).filter((model) =>
+      model.provider === 'openrouter'
+    );
   }
 }
 
 export async function getAllModelsWithOpenRouter(): Promise<Model[]> {
-  const staticModels = Object.values(MODELS).filter(model => model.provider !== 'openrouter');
+  const staticModels = Object.values(MODELS).filter((model) =>
+    model.provider !== 'openrouter'
+  );
   const openRouterModels = await fetchOpenRouterModels();
-  
+
   return [...staticModels, ...openRouterModels];
 }

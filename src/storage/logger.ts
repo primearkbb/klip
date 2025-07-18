@@ -54,18 +54,18 @@ export class ChatLogger {
     const date = new Date().toISOString().split('T')[0];
     const filename = `${date}-${this.sessionId}.json`;
     const filepath = `${this.logDir}/${filename}`;
-    
+
     const logData = {
       ...this.currentLog,
       lastUpdated: Date.now(),
     };
-    
+
     await Deno.writeTextFile(filepath, JSON.stringify(logData, null, 2));
   }
 
   async getRecentLogs(limit = 10): Promise<ChatLog[]> {
     const logs: ChatLog[] = [];
-    
+
     try {
       for await (const dirEntry of Deno.readDir(this.logDir)) {
         if (dirEntry.isFile && dirEntry.name.endsWith('.json')) {
@@ -79,7 +79,7 @@ export class ChatLogger {
       // Directory doesn't exist or other error
       return [];
     }
-    
+
     logs.sort((a, b) => b.timestamp - a.timestamp);
     return logs.slice(0, limit);
   }
@@ -88,32 +88,35 @@ export class ChatLogger {
     const date = new Date().toISOString().split('T')[0];
     const filename = `klip-export-${date}-${this.sessionId}.${format}`;
     const filepath = `${this.logDir}/${filename}`;
-    
+
     if (format === 'json') {
-      await Deno.writeTextFile(filepath, JSON.stringify(this.currentLog, null, 2));
+      await Deno.writeTextFile(
+        filepath,
+        JSON.stringify(this.currentLog, null, 2),
+      );
     } else {
       const txtContent = this.formatAsText(this.currentLog);
       await Deno.writeTextFile(filepath, txtContent);
     }
-    
+
     return filepath;
   }
 
   private formatAsText(log: ChatLog): string {
     const header = `Chat Log - ${new Date(log.timestamp).toLocaleString()}\n`;
     const separator = '='.repeat(50) + '\n';
-    
+
     let content = header + separator + '\n';
-    
+
     for (const message of log.messages) {
       const timestamp = new Date(message.timestamp).toLocaleString();
       const role = message.role.toUpperCase();
-      
+
       content += `[${timestamp}] ${role}:\n`;
       content += message.content + '\n\n';
       content += '-'.repeat(30) + '\n\n';
     }
-    
+
     return content;
   }
 }
