@@ -1,21 +1,34 @@
 import { colors } from '@cliffy/ansi/colors';
 
 export function displayBanner(): void {
+  const terminalWidth = Deno.consoleSize().columns;
+  
+  // Simple, readable banner that works across terminal sizes
+  const brandLine = 'KLIP';
+  const tagLine = 'Terminal AI Chat Interface';
+  const helpLine = 'Type /help for commands • Ctrl+C to exit';
+  
+  // Calculate padding based on terminal width
+  const minWidth = Math.max(40, Math.min(terminalWidth - 4, 60));
+  const padding = Math.floor((minWidth - brandLine.length) / 2);
+  const tagPadding = Math.floor((minWidth - tagLine.length) / 2);
+  const helpPadding = Math.floor((minWidth - helpLine.length) / 2);
+  
+  // Create responsive banner
+  const topBorder = '╭' + '─'.repeat(minWidth) + '╮';
+  const bottomBorder = '╰' + '─'.repeat(minWidth) + '╯';
+  const emptyLine = '│' + ' '.repeat(minWidth) + '│';
+  
   const banner = `
-${colors.magenta('  ╭────────────────────────────────────────────────────────────╮')}
-${colors.magenta('  │')}                                                            ${colors.magenta('│')}
-${colors.magenta('  │')}      ${colors.brightCyan('██╗  ██╗██╗     ██╗██████╗')}                        ${colors.magenta('│')}
-${colors.magenta('  │')}      ${colors.brightCyan('██║ ██╔╝██║     ██║██╔══██╗')}                       ${colors.magenta('│')}
-${colors.magenta('  │')}      ${colors.brightCyan('█████╔╝ ██║     ██║██████╔╝')}                       ${colors.magenta('│')}
-${colors.magenta('  │')}      ${colors.brightCyan('██╔═██╗ ██║     ██║██╔═══╝')}                        ${colors.magenta('│')}
-${colors.magenta('  │')}      ${colors.brightCyan('██║  ██╗███████╗██║██║')}                            ${colors.magenta('│')}
-${colors.magenta('  │')}      ${colors.brightCyan('╚═╝  ╚═╝╚══════╝╚═╝╚═╝')}                            ${colors.magenta('│')}
-${colors.magenta('  │')}                                                            ${colors.magenta('│')}
-${colors.magenta('  │')}          ${colors.brightGreen('⚡ Terminal AI Chat Interface ⚡')}              ${colors.magenta('│')}
-${colors.magenta('  │')}                                                            ${colors.magenta('│')}
-${colors.magenta('  ╰────────────────────────────────────────────────────────────╯')}
+${colors.magenta(topBorder)}
+${colors.magenta(emptyLine)}
+${colors.magenta('│')}${' '.repeat(padding)}${colors.brightCyan(brandLine)}${' '.repeat(minWidth - padding - brandLine.length)}${colors.magenta('│')}
+${colors.magenta(emptyLine)}
+${colors.magenta('│')}${' '.repeat(tagPadding)}${colors.brightGreen(tagLine)}${' '.repeat(minWidth - tagPadding - tagLine.length)}${colors.magenta('│')}
+${colors.magenta(emptyLine)}
+${colors.magenta(bottomBorder)}
 
-${colors.dim('  Type /help for commands • Ctrl+C to exit • Tab for autocomplete')}
+${colors.dim(' '.repeat(helpPadding) + helpLine)}
 `;
 
   console.log(banner);

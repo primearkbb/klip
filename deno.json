@@ -13,8 +13,6 @@
     "@cliffy/ansi/colors": "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/colors.ts"
   },
   "compilerOptions": {
-    "strict": true,
-    "allowJs": false,
-    "checkJs": false
+    "strict": true
   }
 }
