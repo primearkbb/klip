@@ -43,35 +43,74 @@ export class App {
   async run(): Promise<void> {
     this.setupSignalHandlers();
 
-    console.log(colors.dim('  Initializing Klip...\n'));
-
-    console.log(colors.dim('  1. Setting up keystore...'));
-    await this.keyStore.init();
-    console.log(colors.green('  ✓ Keystore initialized'));
-
-    console.log(colors.dim('  2. Setting up chat logger...'));
-    await this.logger.init();
-    console.log(colors.green('  ✓ Chat logger ready'));
-
-    console.log(colors.dim('  3. Setting up analytics logger...'));
-    await this.analytics.init();
-    console.log(colors.green('  ✓ Analytics logger ready'));
-
-    console.log(colors.dim('  4. Checking API credentials...'));
-    if (!(await this.keyStore.hasKey(this.currentModel.provider))) {
-      await this.setupApiKey(this.currentModel.provider);
-    } else {
-      console.log(colors.green('  ✓ API credentials found'));
-    }
-
-    console.log(colors.dim('  5. Initializing API client...'));
-    await this.initializeClient();
-    console.log(colors.green('  ✓ API client ready'));
-
-    console.log(colors.green(`\n  ✓ Using model: ${this.currentModel.name}`));
-    console.log(colors.dim('  Type /help for commands or start chatting!\n'));
+    await this.animatedInitialization();
 
     await this.chatLoop();
+  }
+
+  private async animatedInitialization(): Promise<void> {
+    console.log(colors.magenta('  🚀 Initializing Klip...\n'));
+
+    await this.animateInitStep('🔐 Keystore', async () => {
+      await this.keyStore.init();
+    });
+
+    await this.animateInitStep('📝 Chat Logger', async () => {
+      await this.logger.init();
+    });
+
+    await this.animateInitStep('📊 Analytics', async () => {
+      await this.analytics.init();
+    });
+
+    await this.animateInitStep('🔑 API Credentials', async () => {
+      if (!(await this.keyStore.hasKey(this.currentModel.provider))) {
+        await this.setupApiKey(this.currentModel.provider);
+      }
+    });
+
+    await this.animateInitStep('🌐 API Client', async () => {
+      await this.initializeClient();
+    });
+
+    await this.delay(200);
+    console.log(colors.green(`\n  ✓ Ready! Using model: ${colors.bold(this.currentModel.name)}`));
+    console.log(colors.dim('  Type /help for commands or start chatting!\n'));
+  }
+
+  private async animateInitStep(name: string, operation: () => Promise<void>): Promise<void> {
+    const states = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    const emojis = ['🤖', '⚡', '✨', '🎯', '🚀'];
+    let currentState = 0;
+    let currentEmoji = 0;
+    let animationComplete = false;
+
+    const animate = () => {
+      if (!animationComplete) {
+        const spinner = colors.cyan(states[currentState]);
+        const emoji = emojis[currentEmoji];
+        Deno.stdout.write(new TextEncoder().encode(`\r  ${spinner} ${emoji} ${colors.dim(name)}...`));
+        
+        currentState = (currentState + 1) % states.length;
+        if (currentState === 0) {
+          currentEmoji = (currentEmoji + 1) % emojis.length;
+        }
+        
+        setTimeout(animate, 80);
+      }
+    };
+
+    animate();
+
+    await operation();
+    await this.delay(150);
+
+    animationComplete = true;
+    Deno.stdout.write(new TextEncoder().encode(`\r  ${colors.green('✓')} ${name} ${colors.green('ready')}\n`));
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   private setupSignalHandlers(): void {
