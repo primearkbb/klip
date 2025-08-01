@@ -103,6 +103,18 @@ deno run test-basic.ts
 
 See `TESTING.md` for detailed testing procedures and expected behavior.
 
+## GitHub CLI Usage
+
+When working with GitHub-related tasks, always prefer using the GitHub CLI (`gh`) over manual git commands where possible:
+
+- **Pull requests**: Use `gh pr create`, `gh pr view`, `gh pr merge` instead of manual PR creation
+- **Issues**: Use `gh issue create`, `gh issue list`, `gh issue view` for issue management
+- **Repository operations**: Use `gh repo clone`, `gh repo view` for repository tasks
+- **Workflows**: Use `gh workflow run`, `gh run list` for GitHub Actions
+- **Authentication**: Use `gh auth login` and `gh auth status` for GitHub authentication
+
+This ensures better integration with GitHub's features and more reliable automation.
+
 ## Security Considerations
 
 - API keys are encrypted using AES-GCM with 256-bit keys
