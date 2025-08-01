@@ -49,3 +49,6 @@ yarn.lock
 *.bak
 *.backup
 *.tmp
+
+# Crush directory
+.crush/

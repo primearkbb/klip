@@ -28,6 +28,13 @@ or
 ./dist/klip  # if built
 ```
 
+### Code Quality
+```bash
+deno task check    # Type checking
+deno task lint     # Linting
+deno task fmt      # Code formatting
+```
+
 ## Code Architecture
 
 ### Core Components
@@ -38,7 +45,11 @@ or
 - **`src/api/models.ts`**: Model definitions and provider configurations
 - **`src/storage/keystore.ts`**: Encrypted API key storage using AES-GCM
 - **`src/storage/logger.ts`**: Chat session logging to JSON files
+- **`src/storage/analytics.ts`**: Analytics and metrics collection for usage tracking
 - **`src/utils/retry.ts`**: Retry utilities and interruption handling
+- **`src/ui/formatting.ts`**: Response formatting and streaming display logic
+- **`src/ui/spinner.ts`**: Loading indicators and progress feedback
+- **`src/ui/autocomplete.ts`**: Model selection and autocomplete interface
 
 ### Key Features
 
@@ -47,6 +58,9 @@ or
 - **Encrypted storage**: API keys stored with AES-GCM encryption in `~/.klip/`
 - **Command system**: Slash commands for model switching, chat management, etc.
 - **Chat logging**: Sessions logged to `~/.klip/logs/` as timestamped JSON files
+- **Analytics tracking**: Request/response metrics and usage analytics
+- **Web search integration**: Built-in web search capability for Anthropic models
+- **Signal handling**: Graceful interruption and cleanup on Ctrl+C
 
 ### Data Storage
 
@@ -58,16 +72,27 @@ or
 ### Provider Integration
 
 Each provider (Anthropic, OpenAI, OpenRouter) has different API formats handled in `ApiClient`:
-- Anthropic: `/v1/messages` endpoint with `system` parameter
-- OpenAI: `/v1/chat/completions` with standard format
-- OpenRouter: OpenAI-compatible format with additional headers
+- **Anthropic**: `/v1/messages` endpoint with `system` parameter and web search tools
+- **OpenAI**: `/v1/chat/completions` with standard format
+- **OpenRouter**: OpenAI-compatible format with additional headers and dynamic model fetching
+
+The client supports both streaming and non-streaming responses, with automatic retry logic and exponential backoff for rate limits and temporary failures.
 
 ### UI Components
 
-- **Banner**: ASCII art and help display
-- **Input handling**: Simple stdin reading with history
-- **Spinners**: Loading indicators for operations
-- **Autocomplete**: Model selection interface
+- **Banner**: ASCII art and help display (`src/ui/banner.ts`)
+- **Input handling**: Simple stdin reading with proper signal handling (`src/ui/simple-input.ts`)
+- **Spinners**: Loading indicators with custom animations (`src/ui/spinner.ts`)
+- **Autocomplete**: Model selection interface (`src/ui/autocomplete.ts`)
+- **Formatting**: Streaming response formatting and display (`src/ui/formatting.ts`)
+
+### Architecture Patterns
+
+- **Separation of concerns**: UI, API, storage, and utilities are clearly separated
+- **Provider abstraction**: Single `ApiClient` handles all provider differences
+- **Signal handling**: `InterruptibleOperation` class manages Ctrl+C interruptions
+- **Streaming support**: AsyncGenerator pattern for real-time response streaming
+- **Error handling**: Comprehensive retry logic with exponential backoff
 
 ## Testing
 
