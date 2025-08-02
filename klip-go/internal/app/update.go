@@ -221,7 +221,12 @@ func (m *Model) handleInitializingState(msg tea.Msg) tea.Cmd {
 			return statusMsg{"Klip is ready!", 3 * time.Second}
 		}
 	case initErrorMsg:
-		return nil // Error handling is done elsewhere
+		// On initialization error, still transition to chat but with a warning
+		m.logger.Warn("Initialization completed with errors, but continuing")
+		m.TransitionTo(StateChat)
+		return func() tea.Msg {
+			return statusMsg{"Klip started with limited functionality. Use /settings to configure.", 5 * time.Second}
+		}
 	}
 	return nil
 }
@@ -579,6 +584,13 @@ func (m *Model) deleteWordBackward() {
 
 // sendChatMessage sends a chat message to the API
 func (m *Model) sendChatMessage(content string) tea.Cmd {
+	// Check if API client is available
+	if m.apiClient == nil {
+		return func() tea.Msg {
+			return statusMsg{"No API client available. Use /settings to configure API keys.", 5 * time.Second}
+		}
+	}
+
 	// Create user message
 	userMsg := api.Message{
 		Role:      "user",
@@ -589,7 +601,7 @@ func (m *Model) sendChatMessage(content string) tea.Cmd {
 	// Add to chat history
 	m.chatState.AddMessage(userMsg)
 
-	// Log the user message (convert to storage format)
+	// Log the user message (convert to storage format) - with nil check
 	if m.storage != nil && m.storage.ChatLogger != nil {
 		go func() {
 			storageMsg := storage.Message{

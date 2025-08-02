@@ -249,6 +249,8 @@ func TestParseModelID(t *testing.T) {
 
 func TestHelpCommandBasic(t *testing.T) {
 	model := New()
+	// Model starts in StateInitializing, transition to chat first
+	model.TransitionTo(StateChat)
 
 	// Test basic help command execution
 	cmd := model.handleHelpCommand([]string{})
@@ -272,6 +274,8 @@ func TestClearCommand(t *testing.T) {
 
 func TestModelsCommand(t *testing.T) {
 	model := New()
+	// Model starts in StateInitializing, transition to chat first
+	model.TransitionTo(StateChat)
 
 	cmd := model.handleModelsCommand([]string{})
 	assert.NotNil(t, cmd) // Should return load models command

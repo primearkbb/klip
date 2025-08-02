@@ -69,7 +69,7 @@ func New() *Model {
 	logger := log.New(os.Stderr)
 	logger.SetLevel(log.InfoLevel)
 
-	return &Model{
+	m := &Model{
 		stateManager:     NewStateManager(),
 		ctx:              ctx,
 		cancelFunc:       cancel,
@@ -86,7 +86,20 @@ func New() *Model {
 		lastUpdate:       time.Now(),
 		webSearchEnabled: true,
 		analyticsEnabled: true,
+		currentModel: api.Model{
+			ID:            "claude-3-5-sonnet-20241022",
+			Name:          "Claude 3.5 Sonnet",
+			Provider:      api.ProviderAnthropic,
+			MaxTokens:     4096,
+			ContextWindow: 200000,
+		},
 	}
+
+	// Start proper initialization sequence
+	m.stateManager.current = StateInitializing
+	m.ready = false
+
+	return m
 }
 
 // GetCurrentState returns the current application state
@@ -337,12 +350,16 @@ func (m *Model) formatElapsedTime(start time.Time) string {
 	}
 }
 
-// Init initializes the model and starts the initialization process
+// Init initializes the model and starts the initialization sequence
 func (m *Model) Init() tea.Cmd {
 	return tea.Batch(
 		m.initializeApp(),
 		tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {
 			return tickMsg{t}
+		}),
+		// Add a fallback timeout in case initialization hangs
+		tea.Tick(15*time.Second, func(t time.Time) tea.Msg {
+			return statusMsg{"Initialization timeout, continuing with limited functionality", 5 * time.Second}
 		}),
 	)
 }

@@ -196,9 +196,14 @@ func NewModelsState() *ModelsState {
 
 // FilterModels filters models based on search query
 func (ms *ModelsState) FilterModels(query string) {
+	oldQuery := ms.SearchQuery
 	ms.SearchQuery = query
 	if query == "" {
 		ms.FilteredModels = ms.AvailableModels
+		// Don't reset index when clearing filter
+		if ms.SelectedIndex >= len(ms.FilteredModels) {
+			ms.SelectedIndex = 0
+		}
 		return
 	}
 
@@ -214,7 +219,10 @@ func (ms *ModelsState) FilterModels(query string) {
 	}
 
 	ms.FilteredModels = filtered
-	if ms.SelectedIndex >= len(filtered) {
+	// Reset index when filter query changes
+	if query != oldQuery {
+		ms.SelectedIndex = 0
+	} else if ms.SelectedIndex >= len(filtered) {
 		ms.SelectedIndex = 0
 	}
 }
@@ -337,13 +345,17 @@ func (sm *StateManager) CanTransition(to AppState) bool {
 		return to == StateModels || to == StateSettings || to == StateHistory ||
 			to == StateHelp || to == StateError || to == StateShutdown
 	case StateModels:
-		return to == StateChat || to == StateError
+		return to == StateChat || to == StateSettings || to == StateHistory ||
+			to == StateHelp || to == StateError
 	case StateSettings:
-		return to == StateChat || to == StateError
+		return to == StateChat || to == StateModels || to == StateHistory ||
+			to == StateHelp || to == StateError
 	case StateHistory:
-		return to == StateChat || to == StateError
+		return to == StateChat || to == StateModels || to == StateSettings ||
+			to == StateHelp || to == StateError
 	case StateHelp:
-		return to == StateChat || to == StateError
+		return to == StateChat || to == StateModels || to == StateSettings ||
+			to == StateHistory || to == StateError
 	case StateError:
 		return true // Can transition to any state from error
 	case StateShutdown:
@@ -378,13 +390,12 @@ func (sm *StateManager) Back() bool {
 	}
 
 	target := sm.history[len(sm.history)-1]
-	if sm.CanTransition(target) {
-		sm.current = target
-		sm.history = sm.history[:len(sm.history)-1]
-		return true
-	}
-
-	return false
+	// For Back(), we allow transitions that might normally be invalid
+	// This is intentional to support navigation history
+	sm.previous = sm.current
+	sm.current = target
+	sm.history = sm.history[:len(sm.history)-1]
+	return true
 }
 
 // Reset resets the state manager to initial state

@@ -28,23 +28,42 @@ func (m *Model) initializeStorage() tea.Cmd {
 		m.logger = log.New(os.Stderr)
 		m.logger.SetLevel(log.InfoLevel)
 
-		// Initialize storage
-		storage, err := storage.New()
-		if err != nil {
-			m.logger.Error("Failed to initialize storage", "error", err)
-			return initErrorMsg{fmt.Errorf("storage initialization failed: %w", err)}
+		// Initialize storage with timeout
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		// Use a channel to handle timeout
+		done := make(chan error, 1)
+		go func() {
+			storage, err := storage.New()
+			if err != nil {
+				done <- fmt.Errorf("storage initialization failed: %w", err)
+				return
+			}
+
+			m.storage = storage
+
+			// Initialize storage components
+			if err := m.storage.Initialize(); err != nil {
+				done <- fmt.Errorf("storage component initialization failed: %w", err)
+				return
+			}
+			done <- nil
+		}()
+
+		select {
+		case err := <-done:
+			if err != nil {
+				m.logger.Error("Failed to initialize storage", "error", err)
+				return initErrorMsg{err}
+			}
+			m.logger.Info("Storage system initialized successfully")
+			return initKeystoreMsg{}
+		case <-ctx.Done():
+			err := fmt.Errorf("storage initialization timeout")
+			m.logger.Error("Storage initialization timed out")
+			return initErrorMsg{err}
 		}
-
-		m.storage = storage
-
-		// Initialize storage components
-		if err := m.storage.Initialize(); err != nil {
-			m.logger.Error("Failed to initialize storage components", "error", err)
-			return initErrorMsg{fmt.Errorf("storage component initialization failed: %w", err)}
-		}
-
-		m.logger.Info("Storage system initialized successfully")
-		return initKeystoreMsg{}
 	})
 }
 
@@ -147,10 +166,12 @@ func (m *Model) initializeAPIClient() tea.Cmd {
 		// Set default model
 		m.currentModel = m.getDefaultModel()
 
-		// Initialize API client for the default model
+		// Try to initialize API client for the default model
+		// Don't fail if no API keys are present - user can set them up later
 		if err := m.initAPIClientForModel(m.currentModel); err != nil {
-			m.logger.Warn("Failed to initialize API client", "error", err, "model", m.currentModel.Name)
-			// Don't fail initialization - user can set up API keys later
+			m.logger.Warn("Failed to initialize API client - continuing without API access", "error", err, "model", m.currentModel.Name)
+			// Continue without API client - user will need to set up keys
+			m.apiClient = nil
 		} else {
 			m.logger.Info("API client initialized", "model", m.currentModel.Name, "provider", m.currentModel.Provider)
 		}
@@ -177,7 +198,7 @@ func (m *Model) initAPIClientForModel(model api.Model) error {
 
 	// Create HTTP client
 	httpClient := &http.Client{
-		Timeout: 120 * time.Second,
+		Timeout: 30 * time.Second, // Reduced timeout
 	}
 
 	// Create provider-specific client
@@ -198,13 +219,9 @@ func (m *Model) initAPIClientForModel(model api.Model) error {
 		return fmt.Errorf("failed to create provider client: %w", err)
 	}
 
-	// Validate credentials
-	ctx, cancel := context.WithTimeout(m.ctx, 10*time.Second)
-	defer cancel()
-
-	if err := provider.ValidateCredentials(ctx); err != nil {
-		return fmt.Errorf("credential validation failed: %w", err)
-	}
+	// Skip credential validation for now to avoid hanging
+	// Validation will happen when the user first tries to send a message
+	m.logger.Debug("Skipping credential validation during initialization")
 
 	m.apiClient = provider
 	return nil
@@ -346,15 +363,15 @@ func (m *Model) loadOpenRouterModels() ([]api.Model, error) {
 		return nil, fmt.Errorf("no OpenRouter API key found")
 	}
 
-	// Create OpenRouter provider
-	httpClient := &http.Client{Timeout: 30 * time.Second}
+	// Create OpenRouter provider with shorter timeout
+	httpClient := &http.Client{Timeout: 10 * time.Second}
 	provider, err := providers.NewOpenRouterProvider(apiKey, httpClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create OpenRouter provider: %w", err)
 	}
 
 	// Get models with timeout
-	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+	ctx, cancel := context.WithTimeout(m.ctx, 10*time.Second)
 	defer cancel()
 
 	models, err := provider.GetModels(ctx)
@@ -409,46 +426,28 @@ func (m *Model) performStreamingRequest(request *api.ChatRequest) tea.Cmd {
 
 		chunkChan, errChan := m.apiClient.ChatStream(ctx, request)
 
-		// Start a goroutine to handle the stream
-		go func() {
-			for {
-				select {
-				case chunk, ok := <-chunkChan:
-					if !ok {
-						// Stream finished
-						return
-					}
-
-					// Send chunk to UI
-					tea.Batch(func() tea.Msg {
-						return apiStreamChunkMsg{chunk.Content}
-					})()
-
-					if chunk.Done {
-						tea.Batch(func() tea.Msg {
-							return apiStreamDoneMsg{}
-						})()
-						return
-					}
-
-				case err, ok := <-errChan:
-					if !ok {
-						return
-					}
-
-					tea.Batch(func() tea.Msg {
-						return apiErrorMsg{err}
-					})()
-					return
-
-				case <-ctx.Done():
-					return
+		// Process the stream synchronously in this goroutine
+		for {
+			select {
+			case chunk, ok := <-chunkChan:
+				if !ok {
+					// Stream finished
+					return apiStreamDoneMsg{}
 				}
-			}
-		}()
 
-		// Return immediately to keep UI responsive
-		return nil
+				// Return the first chunk immediately
+				return apiStreamChunkMsg{chunk.Content}
+
+			case err, ok := <-errChan:
+				if !ok {
+					return apiStreamDoneMsg{}
+				}
+				return apiErrorMsg{err}
+
+			case <-ctx.Done():
+				return apiStreamDoneMsg{}
+			}
+		}
 	})
 }
 
