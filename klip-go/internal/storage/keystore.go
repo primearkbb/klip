@@ -157,13 +157,27 @@ func (ks *KeyStore) GetKeys() (*ApiKeys, error) {
 	// Decrypt data
 	jsonData, err := ks.decryptData(encryptedData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decrypt keys: %w", err)
+		// If decryption fails, the key file might be corrupted or using an old key
+		// Log the error and return empty keys instead of failing
+		ks.logger.Warn("Failed to decrypt existing keys, starting fresh", "error", err)
+		
+		// Backup the corrupted file and start fresh
+		backupPath := ks.keyFile + ".corrupted.backup"
+		if backupErr := os.Rename(ks.keyFile, backupPath); backupErr != nil {
+			ks.logger.Warn("Failed to backup corrupted key file", "error", backupErr)
+		} else {
+			ks.logger.Info("Backed up corrupted key file", "backup", backupPath)
+		}
+		
+		return &ApiKeys{}, nil
 	}
 
 	// Parse JSON
 	var keys ApiKeys
 	if err := json.Unmarshal(jsonData, &keys); err != nil {
-		return nil, fmt.Errorf("failed to parse keys JSON: %w", err)
+		// If JSON parsing fails, also start fresh
+		ks.logger.Warn("Failed to parse keys JSON, starting fresh", "error", err)
+		return &ApiKeys{}, nil
 	}
 
 	return &keys, nil

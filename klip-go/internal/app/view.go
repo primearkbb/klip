@@ -90,24 +90,33 @@ func (m *Model) View() string {
 		return m.renderLoading("Initializing...")
 	}
 
-	// Create the main container
+	// Get the main content
 	content := m.renderStateView()
 
-	// Add status bar at the bottom
+	// Create status bar
 	statusBar := m.renderStatusBar()
 
-	// Combine everything
-	mainStyle := baseStyle.Copy().
+	// Ensure content takes up most of the space, leaving room for status bar
+	contentHeight := m.height - 1
+	contentContainer := lipgloss.NewStyle().
 		Width(m.width).
-		Height(m.height)
+		Height(contentHeight).
+		Render(content)
 
+	// Combine content and status bar
 	view := lipgloss.JoinVertical(
 		lipgloss.Left,
-		content,
+		contentContainer,
 		statusBar,
 	)
 
-	return mainStyle.Render(view)
+	// Ensure the final view fills the entire terminal
+	finalContainer := lipgloss.NewStyle().
+		Width(m.width).
+		Height(m.height).
+		Render(view)
+
+	return finalContainer
 }
 
 // renderStateView renders the view for the current state
@@ -188,17 +197,24 @@ func (m *Model) renderOnboardingView() string {
 
 // renderChatView renders the main chat interface
 func (m *Model) renderChatView() string {
-	contentHeight := m.height - 4 // Reserve space for input and status bar
-
+	// Calculate available space
+	messageHeight := m.height - 3 // Reserve space for input and status bar
+	
 	// Chat messages area
-	messagesView := m.renderMessages(contentHeight - 3)
-
+	messagesView := m.renderMessages(messageHeight)
+	
 	// Input area
 	inputView := m.renderInputArea()
-
+	
+	// Create full-height container
+	chatContainer := lipgloss.NewStyle().
+		Width(m.width).
+		Height(messageHeight).
+		Render(messagesView)
+	
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		messagesView,
+		chatContainer,
 		inputView,
 	)
 }
@@ -206,12 +222,51 @@ func (m *Model) renderChatView() string {
 // renderMessages renders the chat messages
 func (m *Model) renderMessages(height int) string {
 	if len(m.chatState.Messages) == 0 {
-		welcome := titleStyle.Render("Klip Chat") + "\n\n" +
-			"Welcome! Start chatting with AI or type /help for commands.\n" +
-			fmt.Sprintf("Current model: %s", successStyle.Render(m.currentModel.Name)) + "\n\n" +
-			mutedStyle.Render("Commands: /help, /model, /clear, /history")
-
-		return m.centerContent(welcome)
+		// Create a properly formatted welcome screen
+		header := lipgloss.NewStyle().
+			Foreground(primaryColor).
+			Bold(true).
+			Align(lipgloss.Center).
+			Width(m.width).
+			Render("Klip Chat")
+			
+		welcomeMsg := lipgloss.NewStyle().
+			Align(lipgloss.Center).
+			Width(m.width).
+			Render("Welcome! Start chatting with AI or type /help for commands.")
+			
+		currentModel := lipgloss.NewStyle().
+			Align(lipgloss.Center).
+			Width(m.width).
+			Render(fmt.Sprintf("Current model: %s", successStyle.Render(m.currentModel.Name)))
+			
+		commands := lipgloss.NewStyle().
+			Foreground(textMuted).
+			Align(lipgloss.Center).
+			Width(m.width).
+			Render("Commands: /help, /models, /settings, /clear, /history")
+		
+		// Join with proper spacing
+		welcome := lipgloss.JoinVertical(
+			lipgloss.Left,
+			"", // Empty line at top
+			header,
+			"", // Empty line
+			welcomeMsg,
+			currentModel,
+			"", // Empty line
+			commands,
+		)
+		
+		// Create container that fills available space but centers content better
+		topPadding := height / 4 // Add some top padding but not too much
+		container := lipgloss.NewStyle().
+			Width(m.width).
+			Height(height).
+			PaddingTop(topPadding).
+			Render(welcome)
+			
+		return container
 	}
 
 	var messageViews []string
@@ -280,27 +335,27 @@ func (m *Model) renderSingleMessage(msg api.Message) string {
 func (m *Model) renderInputArea() string {
 	// Input prompt based on mode
 	var prompt string
-	var style lipgloss.Style
+	var promptStyle lipgloss.Style
 
 	if m.chatState.WaitingForAPI {
 		prompt = "Thinking..."
-		style = warningStyle
+		promptStyle = warningStyle
 	} else {
 		mode := m.getInputMode()
 		switch mode {
 		case InputModeCommand:
 			prompt = "Command"
-			style = lipgloss.NewStyle().Foreground(accentColor)
+			promptStyle = lipgloss.NewStyle().Foreground(accentColor)
 		case InputModeSearch:
 			prompt = "Search"
-			style = lipgloss.NewStyle().Foreground(primaryColor)
+			promptStyle = lipgloss.NewStyle().Foreground(primaryColor)
 		default:
 			prompt = "Message"
-			style = successStyle
+			promptStyle = successStyle
 		}
 	}
 
-	// Input field
+	// Input field content
 	inputText := m.inputBuffer
 	cursor := ""
 
@@ -318,9 +373,36 @@ func (m *Model) renderInputArea() string {
 		cursor = inputText
 	}
 
-	inputField := focusedInputStyle.Width(m.width - len(prompt) - 4).Render(cursor)
+	// Calculate input field width
+	promptWidth := lipgloss.Width(prompt + ": ")
+	inputWidth := m.width - promptWidth - 2
+	if inputWidth < 10 {
+		inputWidth = 10
+	}
 
-	return fmt.Sprintf("%s: %s", style.Render(prompt), inputField)
+	// Create input field with proper styling
+	inputField := lipgloss.NewStyle().
+		Foreground(textPrimary).
+		Background(bgSecondary).
+		Padding(0, 1).
+		Width(inputWidth).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(primaryColor).
+		Render(cursor)
+
+	// Create the full input line
+	inputLine := lipgloss.JoinHorizontal(
+		lipgloss.Left,
+		promptStyle.Render(prompt+": "),
+		inputField,
+	)
+	
+	// Ensure the input line fills the width
+	container := lipgloss.NewStyle().
+		Width(m.width).
+		Render(inputLine)
+	
+	return container
 }
 
 // renderModelsView renders the model selection view
@@ -559,17 +641,9 @@ func (m *Model) renderTypingIndicator() string {
 
 // centerContent centers content on the screen
 func (m *Model) centerContent(content string) string {
-	lines := strings.Split(content, "\n")
-	maxWidth := 0
-	for _, line := range lines {
-		if lipgloss.Width(line) > maxWidth {
-			maxWidth = lipgloss.Width(line)
-		}
-	}
-
 	style := lipgloss.NewStyle().
 		Width(m.width).
-		Height(m.height).
+		Height(m.height - 1). // Leave space for status bar
 		Align(lipgloss.Center, lipgloss.Center)
 
 	return style.Render(content)

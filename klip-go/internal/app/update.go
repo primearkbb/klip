@@ -75,7 +75,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.ready = true
+		if !m.ready {
+			m.ready = true
+		}
 		return m, nil
 
 	case tickMsg:
@@ -216,6 +218,7 @@ func (m *Model) handleInitializingState(msg tea.Msg) tea.Cmd {
 	switch msg.(type) {
 	case initCompleteMsg:
 		// Transition to chat state after successful initialization
+		m.ready = true // Ensure app is ready
 		m.TransitionTo(StateChat)
 		return func() tea.Msg {
 			return statusMsg{"Klip is ready!", 3 * time.Second}
@@ -223,6 +226,7 @@ func (m *Model) handleInitializingState(msg tea.Msg) tea.Cmd {
 	case initErrorMsg:
 		// On initialization error, still transition to chat but with a warning
 		m.logger.Warn("Initialization completed with errors, but continuing")
+		m.ready = true // Ensure app is ready
 		m.TransitionTo(StateChat)
 		return func() tea.Msg {
 			return statusMsg{"Klip started with limited functionality. Use /settings to configure.", 5 * time.Second}

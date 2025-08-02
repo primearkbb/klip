@@ -67,7 +67,7 @@ func Execute() {
 	// Initialize the application model
 	model := app.New()
 
-	// Create the Bubble Tea program with proper options
+	// Create the Bubble Tea program
 	p := tea.NewProgram(
 		model,
 		tea.WithAltScreen(),
