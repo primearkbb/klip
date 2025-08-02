@@ -204,7 +204,7 @@ func (ms *ModelsState) FilterModels(query string) {
 
 	filtered := make([]api.Model, 0)
 	query = strings.ToLower(query)
-	
+
 	for _, model := range ms.AvailableModels {
 		if strings.Contains(strings.ToLower(model.Name), query) ||
 			strings.Contains(strings.ToLower(model.ID), query) ||
@@ -212,7 +212,7 @@ func (ms *ModelsState) FilterModels(query string) {
 			filtered = append(filtered, model)
 		}
 	}
-	
+
 	ms.FilteredModels = filtered
 	if ms.SelectedIndex >= len(filtered) {
 		ms.SelectedIndex = 0
@@ -334,8 +334,8 @@ func (sm *StateManager) CanTransition(to AppState) bool {
 	case StateOnboarding:
 		return to == StateChat || to == StateError
 	case StateChat:
-		return to == StateModels || to == StateSettings || to == StateHistory || 
-			   to == StateHelp || to == StateError || to == StateShutdown
+		return to == StateModels || to == StateSettings || to == StateHistory ||
+			to == StateHelp || to == StateError || to == StateShutdown
 	case StateModels:
 		return to == StateChat || to == StateError
 	case StateSettings:
@@ -358,16 +358,16 @@ func (sm *StateManager) Transition(to AppState) bool {
 	if !sm.CanTransition(to) {
 		return false
 	}
-	
+
 	sm.previous = sm.current
 	sm.current = to
-	
+
 	// Add to history
 	sm.history = append(sm.history, sm.previous)
 	if len(sm.history) > sm.maxHistory {
 		sm.history = sm.history[1:]
 	}
-	
+
 	return true
 }
 
@@ -376,14 +376,14 @@ func (sm *StateManager) Back() bool {
 	if len(sm.history) == 0 {
 		return false
 	}
-	
+
 	target := sm.history[len(sm.history)-1]
 	if sm.CanTransition(target) {
 		sm.current = target
 		sm.history = sm.history[:len(sm.history)-1]
 		return true
 	}
-	
+
 	return false
 }
 

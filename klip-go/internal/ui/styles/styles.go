@@ -12,52 +12,52 @@ import (
 // StyleManager is the centralized style management system for Klip
 type StyleManager struct {
 	// Core managers
-	themeManager       *ThemeManager
-	layoutManager      *LayoutManager
-	componentStyler    *ComponentStyler
-	interactiveStyler  *InteractiveStyler
-	adaptiveStyler     *AdaptiveStyler
-	textFormatter      *TextFormatter
-	accessibilityMgr   *AccessibilityManager
-	
+	themeManager      *ThemeManager
+	layoutManager     *LayoutManager
+	componentStyler   *ComponentStyler
+	interactiveStyler *InteractiveStyler
+	adaptiveStyler    *AdaptiveStyler
+	textFormatter     *TextFormatter
+	accessibilityMgr  *AccessibilityManager
+
 	// Current state
-	currentTheme       *Theme
-	width              int
-	height             int
-	
+	currentTheme *Theme
+	width        int
+	height       int
+
 	// Style cache for performance
-	styleCache         map[string]lipgloss.Style
-	cacheMutex         sync.RWMutex
-	
+	styleCache map[string]lipgloss.Style
+	cacheMutex sync.RWMutex
+
 	// Configuration
-	config             *StyleConfig
-	initialized        bool
-	
+	config      *StyleConfig
+	initialized bool
+
 	// Performance metrics
-	renderCount        int64
-	cacheHits          int64
-	cacheMisses        int64
-	lastUpdateTime     time.Time
+	renderCount    int64
+	cacheHits      int64
+	cacheMisses    int64
+	lastUpdateTime time.Time
 }
 
 // StyleConfig holds global style configuration
 type StyleConfig struct {
 	// Performance settings
-	EnableCaching      bool
-	CacheSize          int
-	AutoResize         bool
-	OptimizeForSpeed   bool
-	
+	EnableCaching    bool
+	CacheSize        int
+	AutoResize       bool
+	OptimizeForSpeed bool
+
 	// Feature flags
-	EnableAnimations   bool
-	EnableGradients    bool
+	EnableAnimations    bool
+	EnableGradients     bool
 	EnableAccessibility bool
-	EnableAdaptation   bool
-	
+	EnableAdaptation    bool
+
 	// Debug settings
-	DebugMode          bool
-	ShowMetrics        bool
-	LogPerformance     bool
+	DebugMode      bool
+	ShowMetrics    bool
+	LogPerformance bool
 }
 
 // NewStyleManager creates a new centralized style manager
@@ -68,10 +68,10 @@ func NewStyleManager(width, height int) *StyleManager {
 		styleCache: make(map[string]lipgloss.Style),
 		config:     getDefaultStyleConfig(),
 	}
-	
+
 	// Initialize all managers
 	sm.initialize()
-	
+
 	return sm
 }
 
@@ -80,36 +80,36 @@ func (sm *StyleManager) initialize() {
 	// Initialize theme manager first
 	sm.themeManager = NewThemeManager()
 	sm.currentTheme = sm.themeManager.GetCurrentTheme()
-	
+
 	// Initialize adaptive styler to detect terminal capabilities
 	sm.adaptiveStyler = NewAdaptiveStyler(sm.currentTheme, sm.width, sm.height)
 	capabilities := sm.adaptiveStyler.GetCapabilities()
-	
+
 	// Apply adaptive theme
 	if sm.config.EnableAdaptation {
 		sm.currentTheme = sm.adaptiveStyler.AdaptTheme(sm.currentTheme)
 	}
-	
+
 	// Initialize accessibility manager
 	if sm.config.EnableAccessibility {
 		sm.accessibilityMgr = NewAccessibilityManager(sm.currentTheme, capabilities)
-		
+
 		// Apply accessibility adaptations
 		if sm.accessibilityMgr.IsAccessibilityEnabled() {
 			sm.currentTheme = sm.accessibilityMgr.CreateAccessibleTheme(sm.currentTheme, AccessibilityAA)
 		}
 	}
-	
+
 	// Initialize other managers with the final theme
 	sm.layoutManager = NewLayoutManager(sm.width, sm.height, sm.currentTheme)
 	sm.componentStyler = NewComponentStyler(sm.currentTheme, sm.width, sm.height)
 	sm.textFormatter = NewTextFormatter(sm.currentTheme, sm.width, sm.height, capabilities)
-	
+
 	// Initialize interactive styler if animations are enabled
 	if sm.config.EnableAnimations {
 		sm.interactiveStyler = NewInteractiveStyler(sm.currentTheme, sm.width, sm.height)
 	}
-	
+
 	sm.initialized = true
 	sm.lastUpdateTime = time.Now()
 }
@@ -121,31 +121,31 @@ func (sm *StyleManager) SetTheme(themeName string) error {
 	if !sm.initialized {
 		return fmt.Errorf("style manager not initialized")
 	}
-	
+
 	// Set theme through theme manager
 	err := sm.themeManager.SetTheme(themeName)
 	if err != nil {
 		return err
 	}
-	
+
 	// Update current theme
 	sm.currentTheme = sm.themeManager.GetCurrentTheme()
-	
+
 	// Apply adaptations
 	if sm.config.EnableAdaptation {
 		sm.currentTheme = sm.adaptiveStyler.AdaptTheme(sm.currentTheme)
 	}
-	
+
 	if sm.config.EnableAccessibility && sm.accessibilityMgr != nil && sm.accessibilityMgr.IsAccessibilityEnabled() {
 		sm.currentTheme = sm.accessibilityMgr.CreateAccessibleTheme(sm.currentTheme, AccessibilityAA)
 	}
-	
+
 	// Update all managers with new theme
 	sm.updateManagersWithTheme()
-	
+
 	// Clear cache to force re-rendering with new theme
 	sm.clearCache()
-	
+
 	return nil
 }
 
@@ -209,16 +209,16 @@ func (sm *StyleManager) RenderLayout(layout interface{}, content ...string) stri
 // StyleButton creates a styled button
 func (sm *StyleManager) StyleButton(text string, variant ButtonStyle, size ButtonSize, state ButtonState) string {
 	cacheKey := fmt.Sprintf("button_%s_%d_%d_%d", text, variant, size, state)
-	
+
 	if cached, exists := sm.getCached(cacheKey); exists {
 		return cached.Render(text)
 	}
-	
+
 	result := sm.componentStyler.Button(text, variant, size, state)
-	
+
 	// Cache the style (not the rendered result since text varies)
 	sm.setCached(cacheKey, lipgloss.NewStyle())
-	
+
 	return result
 }
 
@@ -266,7 +266,7 @@ func (sm *StyleManager) StyleInteractiveButton(text string, variant ButtonStyle,
 		}
 		return sm.componentStyler.Button(text, variant, size, buttonState)
 	}
-	
+
 	return sm.interactiveStyler.InteractiveButton(text, variant, size, state, progress)
 }
 
@@ -275,7 +275,7 @@ func (sm *StyleManager) StyleAnimatedProgress(targetProgress, currentProgress fl
 	if sm.interactiveStyler == nil || !sm.config.EnableAnimations {
 		return sm.componentStyler.ProgressBar(currentProgress, width, showPercentage)
 	}
-	
+
 	return sm.interactiveStyler.AnimatedProgressBar(targetProgress, currentProgress, width, showPercentage, animationType)
 }
 
@@ -326,19 +326,19 @@ func (sm *StyleManager) IsAccessibilityEnabled() bool {
 func (sm *StyleManager) Resize(width, height int) {
 	sm.width = width
 	sm.height = height
-	
+
 	if sm.layoutManager != nil {
 		sm.layoutManager.Resize(width, height)
 	}
-	
+
 	if sm.adaptiveStyler != nil {
 		sm.adaptiveStyler.Resize(width, height)
 	}
-	
+
 	if sm.textFormatter != nil {
 		sm.textFormatter.Resize(width, height)
 	}
-	
+
 	// Clear cache as dimensions affect rendering
 	sm.clearCache()
 }
@@ -358,17 +358,17 @@ func (sm *StyleManager) getCached(key string) (lipgloss.Style, bool) {
 	if !sm.config.EnableCaching {
 		return lipgloss.NewStyle(), false
 	}
-	
+
 	sm.cacheMutex.RLock()
 	defer sm.cacheMutex.RUnlock()
-	
+
 	style, exists := sm.styleCache[key]
 	if exists {
 		sm.cacheHits++
 	} else {
 		sm.cacheMisses++
 	}
-	
+
 	return style, exists
 }
 
@@ -377,10 +377,10 @@ func (sm *StyleManager) setCached(key string, style lipgloss.Style) {
 	if !sm.config.EnableCaching {
 		return
 	}
-	
+
 	sm.cacheMutex.Lock()
 	defer sm.cacheMutex.Unlock()
-	
+
 	// Simple cache size management
 	if len(sm.styleCache) >= sm.config.CacheSize {
 		// Remove oldest entries (simplified LRU)
@@ -389,7 +389,7 @@ func (sm *StyleManager) setCached(key string, style lipgloss.Style) {
 			break
 		}
 	}
-	
+
 	sm.styleCache[key] = style
 }
 
@@ -397,7 +397,7 @@ func (sm *StyleManager) setCached(key string, style lipgloss.Style) {
 func (sm *StyleManager) clearCache() {
 	sm.cacheMutex.Lock()
 	defer sm.cacheMutex.Unlock()
-	
+
 	sm.styleCache = make(map[string]lipgloss.Style)
 }
 
@@ -418,7 +418,7 @@ func (sm *StyleManager) GetPerformanceMetrics() map[string]interface{} {
 // UpdateConfig updates the style manager configuration
 func (sm *StyleManager) UpdateConfig(config *StyleConfig) {
 	sm.config = config
-	
+
 	// Reinitialize if needed
 	if sm.initialized {
 		sm.initialize()
@@ -480,15 +480,15 @@ func (sm *StyleManager) updateManagersWithTheme() {
 	if sm.layoutManager != nil {
 		sm.layoutManager.theme = sm.currentTheme
 	}
-	
+
 	if sm.componentStyler != nil {
 		sm.componentStyler.theme = sm.currentTheme
 	}
-	
+
 	if sm.interactiveStyler != nil {
 		sm.interactiveStyler.theme = sm.currentTheme
 	}
-	
+
 	if sm.textFormatter != nil {
 		sm.textFormatter.theme = sm.currentTheme
 	}
@@ -498,16 +498,16 @@ func (sm *StyleManager) updateManagersWithTheme() {
 func getDefaultStyleConfig() *StyleConfig {
 	return &StyleConfig{
 		EnableCaching:       true,
-		CacheSize:          1000,
-		AutoResize:         true,
-		OptimizeForSpeed:   false,
-		EnableAnimations:   true,
-		EnableGradients:    true,
+		CacheSize:           1000,
+		AutoResize:          true,
+		OptimizeForSpeed:    false,
+		EnableAnimations:    true,
+		EnableGradients:     true,
 		EnableAccessibility: true,
-		EnableAdaptation:   true,
-		DebugMode:          false,
-		ShowMetrics:        false,
-		LogPerformance:     false,
+		EnableAdaptation:    true,
+		DebugMode:           false,
+		ShowMetrics:         false,
+		LogPerformance:      false,
 	}
 }
 
@@ -516,47 +516,47 @@ func getDefaultStyleConfig() *StyleConfig {
 // GetSystemInfo returns comprehensive system information
 func (sm *StyleManager) GetSystemInfo() map[string]interface{} {
 	info := map[string]interface{}{
-		"initialized":    sm.initialized,
-		"current_theme":  sm.currentTheme.Name,
-		"width":          sm.width,
-		"height":         sm.height,
-		"screen_size":    sm.GetScreenSize(),
-		"config":         sm.config,
-		"performance":    sm.GetPerformanceMetrics(),
+		"initialized":   sm.initialized,
+		"current_theme": sm.currentTheme.Name,
+		"width":         sm.width,
+		"height":        sm.height,
+		"screen_size":   sm.GetScreenSize(),
+		"config":        sm.config,
+		"performance":   sm.GetPerformanceMetrics(),
 	}
-	
+
 	if sm.adaptiveStyler != nil {
 		info["terminal_capabilities"] = sm.adaptiveStyler.GetCapabilities()
 		info["performance_settings"] = sm.adaptiveStyler.GetPerformanceSettings()
 	}
-	
+
 	if sm.accessibilityMgr != nil {
 		info["accessibility_status"] = sm.accessibilityMgr.GetAccessibilityStatus()
 		info["accessibility_preferences"] = sm.accessibilityMgr.GetPreferences()
 	}
-	
+
 	return info
 }
 
 // PrintDiagnostics outputs diagnostic information
 func (sm *StyleManager) PrintDiagnostics() string {
 	info := sm.GetSystemInfo()
-	
+
 	var result strings.Builder
 	result.WriteString("Klip Style Manager Diagnostics\n")
 	result.WriteString("==============================\n\n")
-	
+
 	result.WriteString(fmt.Sprintf("Status: %s\n", map[bool]string{true: "Initialized", false: "Not Initialized"}[sm.initialized]))
 	result.WriteString(fmt.Sprintf("Theme: %s\n", sm.currentTheme.Name))
 	result.WriteString(fmt.Sprintf("Dimensions: %dx%d\n", sm.width, sm.height))
 	result.WriteString(fmt.Sprintf("Screen Size: %v\n", info["screen_size"]))
-	
+
 	result.WriteString("\nFeatures:\n")
 	result.WriteString(fmt.Sprintf("  Caching: %v\n", sm.config.EnableCaching))
 	result.WriteString(fmt.Sprintf("  Animations: %v\n", sm.config.EnableAnimations))
 	result.WriteString(fmt.Sprintf("  Accessibility: %v\n", sm.config.EnableAccessibility))
 	result.WriteString(fmt.Sprintf("  Adaptation: %v\n", sm.config.EnableAdaptation))
-	
+
 	if sm.config.ShowMetrics {
 		metrics := sm.GetPerformanceMetrics()
 		result.WriteString(fmt.Sprintf("\nPerformance:\n"))
@@ -564,11 +564,11 @@ func (sm *StyleManager) PrintDiagnostics() string {
 		result.WriteString(fmt.Sprintf("  Cache Hit Rate: %.2f%%\n", metrics["cache_hit_rate"].(float64)*100))
 		result.WriteString(fmt.Sprintf("  Cache Size: %v\n", metrics["cache_size"]))
 	}
-	
+
 	if sm.accessibilityMgr != nil {
 		result.WriteString(fmt.Sprintf("\nAccessibility: %s\n", sm.accessibilityMgr.GetAccessibilityStatus()))
 	}
-	
+
 	if sm.adaptiveStyler != nil {
 		result.WriteString(fmt.Sprintf("\nTerminal Capabilities:\n"))
 		caps := sm.adaptiveStyler.GetCapabilities()
@@ -577,7 +577,7 @@ func (sm *StyleManager) PrintDiagnostics() string {
 		result.WriteString(fmt.Sprintf("  256 Color: %v\n", caps.Has256Color))
 		result.WriteString(fmt.Sprintf("  Unicode: %v\n", caps.SupportsUnicode))
 	}
-	
+
 	return result.String()
 }
 

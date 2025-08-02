@@ -64,24 +64,24 @@ type StatusBar struct {
 	connectionState ConnectionState
 	currentModel    string
 	currentProvider string
-	
+
 	// Usage tracking
 	tokenCount      int
 	estimatedCost   float64
 	requestCount    int
 	sessionDuration time.Duration
 	sessionStart    time.Time
-	
+
 	// Performance metrics
 	avgLatency      time.Duration
 	lastRequestTime time.Duration
 	queuedRequests  int
-	
+
 	// System status
-	memoryUsage     int64
-	networkQuality  int // 0-100
-	apiHealth       map[string]bool
-	
+	memoryUsage    int64
+	networkQuality int // 0-100
+	apiHealth      map[string]bool
+
 	width  int
 	height int
 }
@@ -95,28 +95,28 @@ type ProgressTracker struct {
 
 // ProgressOperation represents a single progress operation
 type ProgressOperation struct {
-	ID          string
-	Title       string
-	Progress    float64
-	Total       int64
-	Current     int64
-	Unit        string
-	StartTime   time.Time
+	ID           string
+	Title        string
+	Progress     float64
+	Total        int64
+	Current      int64
+	Unit         string
+	StartTime    time.Time
 	EstimatedEnd time.Time
-	Status      string
-	Cancelable  bool
-	progress    progress.Model
+	Status       string
+	Cancelable   bool
+	progress     progress.Model
 }
 
 // LoadingSpinner provides various loading indicators
 type LoadingSpinner struct {
-	spinner     spinner.Model
-	message     string
-	subMessage  string
-	showTime    bool
-	startTime   time.Time
-	width       int
-	height      int
+	spinner    spinner.Model
+	message    string
+	subMessage string
+	showTime   bool
+	startTime  time.Time
+	width      int
+	height     int
 }
 
 // NotificationCenter manages user notifications
@@ -141,18 +141,18 @@ const (
 
 // TokenUsageDisplay shows token usage and costs
 type TokenUsageDisplay struct {
-	currentTokens   int
-	sessionTokens   int
-	totalTokens     int64
-	estimatedCost   float64
-	sessionCost     float64
-	totalCost       float64
-	currentModel    string
-	rateLimit       int
-	rateLimitUsed   int
-	width          int
-	height         int
-	showDetails    bool
+	currentTokens int
+	sessionTokens int
+	totalTokens   int64
+	estimatedCost float64
+	sessionCost   float64
+	totalCost     float64
+	currentModel  string
+	rateLimit     int
+	rateLimitUsed int
+	width         int
+	height        int
+	showDetails   bool
 }
 
 // NewStatusBar creates a new status bar
@@ -161,8 +161,8 @@ func NewStatusBar(width, height int) *StatusBar {
 		connectionState: ConnectionDisconnected,
 		apiHealth:       make(map[string]bool),
 		sessionStart:    time.Now(),
-		width:          width,
-		height:         height,
+		width:           width,
+		height:          height,
 	}
 }
 
@@ -172,7 +172,7 @@ func (sb *StatusBar) Update(msg tea.Msg) (*StatusBar, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		sb.width = msg.Width
 		sb.height = msg.Height
-		
+
 	case StatusMsg:
 		switch msg.Type {
 		case "connection_state":
@@ -214,36 +214,36 @@ func (sb *StatusBar) Update(msg tea.Msg) (*StatusBar, tea.Cmd) {
 			}
 		}
 	}
-	
+
 	// Update session duration
 	sb.sessionDuration = time.Since(sb.sessionStart)
-	
+
 	return sb, nil
 }
 
 // View renders the status bar
 func (sb *StatusBar) View() string {
 	var sections []string
-	
+
 	// Connection status
 	sections = append(sections, sb.renderConnectionStatus())
-	
+
 	// Model info
 	if sb.currentModel != "" {
 		sections = append(sections, sb.renderModelInfo())
 	}
-	
+
 	// Usage stats
 	sections = append(sections, sb.renderUsageStats())
-	
+
 	// Performance metrics
 	sections = append(sections, sb.renderPerformanceMetrics())
-	
+
 	// System status
 	sections = append(sections, sb.renderSystemStatus())
-	
+
 	content := strings.Join(sections, StatusSeparatorStyle.Render(" │ "))
-	
+
 	return StatusBarStyle.Render(content)
 }
 
@@ -251,7 +251,7 @@ func (sb *StatusBar) View() string {
 func (sb *StatusBar) renderConnectionStatus() string {
 	var status string
 	var style lipgloss.Style
-	
+
 	switch sb.connectionState {
 	case ConnectionDisconnected:
 		status = "●"
@@ -266,7 +266,7 @@ func (sb *StatusBar) renderConnectionStatus() string {
 		status = "●"
 		style = StatusErrorStyle
 	}
-	
+
 	return style.Render(status)
 }
 
@@ -281,53 +281,53 @@ func (sb *StatusBar) renderModelInfo() string {
 // renderUsageStats renders usage statistics
 func (sb *StatusBar) renderUsageStats() string {
 	var parts []string
-	
+
 	if sb.tokenCount > 0 {
 		parts = append(parts, fmt.Sprintf("%s tokens", humanize.Comma(int64(sb.tokenCount))))
 	}
-	
+
 	if sb.estimatedCost > 0 {
 		parts = append(parts, fmt.Sprintf("$%.4f", sb.estimatedCost))
 	}
-	
+
 	if sb.requestCount > 0 {
 		parts = append(parts, fmt.Sprintf("%d reqs", sb.requestCount))
 	}
-	
+
 	if len(parts) == 0 {
 		return ""
 	}
-	
+
 	return UsageStatsStyle.Render(strings.Join(parts, " • "))
 }
 
 // renderPerformanceMetrics renders performance information
 func (sb *StatusBar) renderPerformanceMetrics() string {
 	var parts []string
-	
+
 	if sb.avgLatency > 0 {
 		parts = append(parts, fmt.Sprintf("~%dms", sb.avgLatency.Milliseconds()))
 	}
-	
+
 	if sb.queuedRequests > 0 {
 		parts = append(parts, fmt.Sprintf("%d queued", sb.queuedRequests))
 	}
-	
+
 	if len(parts) == 0 {
 		return ""
 	}
-	
+
 	return PerformanceStyle.Render(strings.Join(parts, " • "))
 }
 
 // renderSystemStatus renders system status information
 func (sb *StatusBar) renderSystemStatus() string {
 	var parts []string
-	
+
 	// Session duration
 	duration := sb.sessionDuration.Round(time.Second)
 	parts = append(parts, fmt.Sprintf("⏱ %s", duration))
-	
+
 	// Network quality
 	if sb.networkQuality > 0 {
 		var qualityIcon string
@@ -343,7 +343,7 @@ func (sb *StatusBar) renderSystemStatus() string {
 		}
 		parts = append(parts, qualityIcon)
 	}
-	
+
 	return SystemStatusStyle.Render(strings.Join(parts, " "))
 }
 
@@ -360,7 +360,7 @@ func NewProgressTracker(width, height int) *ProgressTracker {
 func (pt *ProgressTracker) AddOperation(id, title string, total int64, unit string) {
 	prog := progress.New(progress.WithDefaultGradient())
 	prog.Width = pt.width - 20 // Leave space for text
-	
+
 	pt.operations[id] = &ProgressOperation{
 		ID:         id,
 		Title:      title,
@@ -378,10 +378,10 @@ func (pt *ProgressTracker) UpdateOperation(id string, current int64, status stri
 	if op, exists := pt.operations[id]; exists {
 		op.Current = current
 		op.Status = status
-		
+
 		if op.Total > 0 {
 			op.Progress = float64(current) / float64(op.Total)
-			
+
 			// Estimate completion time
 			elapsed := time.Since(op.StartTime)
 			if op.Progress > 0 {
@@ -409,17 +409,17 @@ func (pt *ProgressTracker) RemoveOperation(id string) {
 // Update handles progress tracker updates
 func (pt *ProgressTracker) Update(msg tea.Msg) (*ProgressTracker, tea.Cmd) {
 	var cmds []tea.Cmd
-	
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		pt.width = msg.Width
 		pt.height = msg.Height
-		
+
 		// Update all progress bar widths
 		for _, op := range pt.operations {
 			op.progress.Width = pt.width - 20
 		}
-		
+
 	case StatusMsg:
 		switch msg.Type {
 		case "progress_add":
@@ -447,7 +447,7 @@ func (pt *ProgressTracker) Update(msg tea.Msg) (*ProgressTracker, tea.Cmd) {
 			}
 		}
 	}
-	
+
 	// Update all progress bars
 	for id, op := range pt.operations {
 		var cmd tea.Cmd
@@ -458,7 +458,7 @@ func (pt *ProgressTracker) Update(msg tea.Msg) (*ProgressTracker, tea.Cmd) {
 		}
 		pt.operations[id] = op
 	}
-	
+
 	return pt, tea.Batch(cmds...)
 }
 
@@ -467,58 +467,58 @@ func (pt *ProgressTracker) View() string {
 	if len(pt.operations) == 0 {
 		return ""
 	}
-	
+
 	var content strings.Builder
-	
+
 	for _, op := range pt.operations {
 		content.WriteString(pt.renderOperation(op))
 		content.WriteString("\n")
 	}
-	
+
 	return ProgressContainerStyle.Render(content.String())
 }
 
 // renderOperation renders a single progress operation
 func (pt *ProgressTracker) renderOperation(op *ProgressOperation) string {
 	var content strings.Builder
-	
+
 	// Title and status
 	titleLine := fmt.Sprintf("%s - %s", op.Title, op.Status)
 	content.WriteString(ProgressTitleStyle.Render(titleLine))
 	content.WriteString("\n")
-	
+
 	// Progress bar
 	content.WriteString(op.progress.ViewAs(op.Progress))
 	content.WriteString("\n")
-	
+
 	// Details line
 	var details []string
-	
+
 	if op.Total > 0 {
-		details = append(details, fmt.Sprintf("%s/%s %s", 
-			humanize.Comma(op.Current), 
-			humanize.Comma(op.Total), 
+		details = append(details, fmt.Sprintf("%s/%s %s",
+			humanize.Comma(op.Current),
+			humanize.Comma(op.Total),
 			op.Unit))
-		
+
 		percentage := int(op.Progress * 100)
 		details = append(details, fmt.Sprintf("%d%%", percentage))
 	}
-	
+
 	// Time estimates
 	elapsed := time.Since(op.StartTime)
 	details = append(details, fmt.Sprintf("elapsed: %s", elapsed.Round(time.Second)))
-	
+
 	if !op.EstimatedEnd.IsZero() && op.Progress > 0 && op.Progress < 1 {
 		remaining := time.Until(op.EstimatedEnd)
 		if remaining > 0 {
 			details = append(details, fmt.Sprintf("remaining: ~%s", remaining.Round(time.Second)))
 		}
 	}
-	
+
 	if len(details) > 0 {
 		content.WriteString(ProgressDetailsStyle.Render(strings.Join(details, " • ")))
 	}
-	
+
 	return content.String()
 }
 
@@ -527,7 +527,7 @@ func NewLoadingSpinner(width, height int) *LoadingSpinner {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = SpinnerStyle
-	
+
 	return &LoadingSpinner{
 		spinner:   s,
 		startTime: time.Now(),
@@ -557,7 +557,7 @@ func (ls *LoadingSpinner) Update(msg tea.Msg) (*LoadingSpinner, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		ls.width = msg.Width
 		ls.height = msg.Height
-		
+
 	case StatusMsg:
 		switch msg.Type {
 		case "spinner_message":
@@ -570,34 +570,34 @@ func (ls *LoadingSpinner) Update(msg tea.Msg) (*LoadingSpinner, tea.Cmd) {
 			}
 		}
 	}
-	
+
 	var cmd tea.Cmd
 	ls.spinner, cmd = ls.spinner.Update(msg)
-	
+
 	return ls, cmd
 }
 
 // View renders the loading spinner
 func (ls *LoadingSpinner) View() string {
 	var content strings.Builder
-	
+
 	// Spinner and main message
 	line := fmt.Sprintf("%s %s", ls.spinner.View(), ls.message)
 	content.WriteString(SpinnerMessageStyle.Render(line))
-	
+
 	// Sub-message
 	if ls.subMessage != "" {
 		content.WriteString("\n")
 		content.WriteString(SpinnerSubMessageStyle.Render(ls.subMessage))
 	}
-	
+
 	// Time display
 	if ls.showTime {
 		elapsed := time.Since(ls.startTime).Round(time.Second)
 		content.WriteString("\n")
 		content.WriteString(SpinnerTimeStyle.Render(fmt.Sprintf("(%s)", elapsed)))
 	}
-	
+
 	return SpinnerContainerStyle.Render(content.String())
 }
 
@@ -616,7 +616,7 @@ func NewNotificationCenter(width, height int) *NotificationCenter {
 func (nc *NotificationCenter) AddNotification(notification Notification) {
 	notification.ShowTime = time.Now()
 	nc.notifications = append(nc.notifications, notification)
-	
+
 	// Remove old notifications if we exceed the limit
 	if len(nc.notifications) > 20 {
 		nc.notifications = nc.notifications[len(nc.notifications)-20:]
@@ -636,12 +636,12 @@ func (nc *NotificationCenter) RemoveNotification(id string) {
 // Update handles notification center updates
 func (nc *NotificationCenter) Update(msg tea.Msg) (*NotificationCenter, tea.Cmd) {
 	var cmds []tea.Cmd
-	
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		nc.width = msg.Width
 		nc.height = msg.Height
-		
+
 	case StatusMsg:
 		switch msg.Type {
 		case "notification_add":
@@ -654,7 +654,7 @@ func (nc *NotificationCenter) Update(msg tea.Msg) (*NotificationCenter, tea.Cmd)
 			}
 		}
 	}
-	
+
 	// Auto-remove expired notifications
 	now := time.Now()
 	var active []Notification
@@ -666,7 +666,7 @@ func (nc *NotificationCenter) Update(msg tea.Msg) (*NotificationCenter, tea.Cmd)
 		}
 	}
 	nc.notifications = active
-	
+
 	return nc, tea.Batch(cmds...)
 }
 
@@ -675,22 +675,22 @@ func (nc *NotificationCenter) View() string {
 	if len(nc.notifications) == 0 {
 		return ""
 	}
-	
+
 	// Show only the most recent notifications
 	visible := nc.notifications
 	if len(visible) > nc.maxVisible {
 		visible = visible[len(visible)-nc.maxVisible:]
 	}
-	
+
 	var content strings.Builder
-	
+
 	for i, notification := range visible {
 		content.WriteString(nc.renderNotification(notification))
 		if i < len(visible)-1 {
 			content.WriteString("\n")
 		}
 	}
-	
+
 	return nc.positionContent(content.String())
 }
 
@@ -698,7 +698,7 @@ func (nc *NotificationCenter) View() string {
 func (nc *NotificationCenter) renderNotification(notification Notification) string {
 	var style lipgloss.Style
 	var icon string
-	
+
 	switch notification.Type {
 	case NotificationInfo:
 		style = NotificationInfoStyle
@@ -713,19 +713,19 @@ func (nc *NotificationCenter) renderNotification(notification Notification) stri
 		style = NotificationErrorStyle
 		icon = "✗"
 	}
-	
+
 	var content strings.Builder
-	
+
 	// Title with icon
 	title := fmt.Sprintf("%s %s", icon, notification.Title)
 	content.WriteString(NotificationTitleStyle.Render(title))
-	
+
 	// Message
 	if notification.Message != "" {
 		content.WriteString("\n")
 		content.WriteString(NotificationMessageStyle.Render(notification.Message))
 	}
-	
+
 	// Actions
 	if len(notification.Actions) > 0 {
 		content.WriteString("\n")
@@ -735,7 +735,7 @@ func (nc *NotificationCenter) renderNotification(notification Notification) stri
 		}
 		content.WriteString(strings.Join(actions, " "))
 	}
-	
+
 	return style.Render(content.String())
 }
 
@@ -781,7 +781,7 @@ func (tud *TokenUsageDisplay) Update(msg tea.Msg) (*TokenUsageDisplay, tea.Cmd) 
 	case tea.WindowSizeMsg:
 		tud.width = msg.Width
 		tud.height = msg.Height
-		
+
 	case StatusMsg:
 		switch msg.Type {
 		case "token_current":
@@ -825,7 +825,7 @@ func (tud *TokenUsageDisplay) Update(msg tea.Msg) (*TokenUsageDisplay, tea.Cmd) 
 			tud.showDetails = !tud.showDetails
 		}
 	}
-	
+
 	return tud, nil
 }
 
@@ -840,29 +840,29 @@ func (tud *TokenUsageDisplay) View() string {
 // renderCompact renders a compact token usage view
 func (tud *TokenUsageDisplay) renderCompact() string {
 	var parts []string
-	
+
 	if tud.currentTokens > 0 {
 		parts = append(parts, fmt.Sprintf("%s tokens", humanize.Comma(int64(tud.currentTokens))))
 	}
-	
+
 	if tud.estimatedCost > 0 {
 		parts = append(parts, fmt.Sprintf("~$%.4f", tud.estimatedCost))
 	}
-	
+
 	if len(parts) == 0 {
 		return ""
 	}
-	
+
 	return TokenUsageCompactStyle.Render(strings.Join(parts, " • "))
 }
 
 // renderDetailed renders a detailed token usage view
 func (tud *TokenUsageDisplay) renderDetailed() string {
 	var content strings.Builder
-	
+
 	content.WriteString(TokenUsageTitleStyle.Render("Token Usage"))
 	content.WriteString("\n")
-	
+
 	// Current request
 	if tud.currentTokens > 0 {
 		content.WriteString(fmt.Sprintf("Current: %s tokens", humanize.Comma(int64(tud.currentTokens))))
@@ -871,7 +871,7 @@ func (tud *TokenUsageDisplay) renderDetailed() string {
 		}
 		content.WriteString("\n")
 	}
-	
+
 	// Session totals
 	if tud.sessionTokens > 0 {
 		content.WriteString(fmt.Sprintf("Session: %s tokens", humanize.Comma(int64(tud.sessionTokens))))
@@ -880,7 +880,7 @@ func (tud *TokenUsageDisplay) renderDetailed() string {
 		}
 		content.WriteString("\n")
 	}
-	
+
 	// All-time totals
 	if tud.totalTokens > 0 {
 		content.WriteString(fmt.Sprintf("Total: %s tokens", humanize.Comma(tud.totalTokens)))
@@ -889,17 +889,17 @@ func (tud *TokenUsageDisplay) renderDetailed() string {
 		}
 		content.WriteString("\n")
 	}
-	
+
 	// Rate limits
 	if tud.rateLimit > 0 {
 		content.WriteString("\n")
 		content.WriteString(TokenUsageRateLimitStyle.Render("Rate Limit"))
 		content.WriteString("\n")
-		
+
 		percentage := float64(tud.rateLimitUsed) / float64(tud.rateLimit) * 100
-		content.WriteString(fmt.Sprintf("%d/%d requests (%.1f%%)", 
+		content.WriteString(fmt.Sprintf("%d/%d requests (%.1f%%)",
 			tud.rateLimitUsed, tud.rateLimit, percentage))
-		
+
 		// Rate limit bar
 		prog := progress.New(progress.WithDefaultGradient())
 		prog.Width = tud.width - 10
@@ -907,13 +907,13 @@ func (tud *TokenUsageDisplay) renderDetailed() string {
 		content.WriteString("\n")
 		content.WriteString(prog.ViewAs(rateLimitProgress))
 	}
-	
+
 	// Current model
 	if tud.currentModel != "" {
 		content.WriteString("\n")
 		content.WriteString(TokenUsageModelStyle.Render(fmt.Sprintf("Model: %s", tud.currentModel)))
 	}
-	
+
 	return TokenUsageContainerStyle.Render(content.String())
 }
 
@@ -921,134 +921,134 @@ func (tud *TokenUsageDisplay) renderDetailed() string {
 var (
 	// Status bar styles
 	StatusBarStyle = lipgloss.NewStyle().
-		Background(lipgloss.Color("#F3F4F6")).
-		Foreground(lipgloss.Color("#374151")).
-		Padding(0, 1).
-		BorderTop(true).
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("#E5E7EB"))
+			Background(lipgloss.Color("#F3F4F6")).
+			Foreground(lipgloss.Color("#374151")).
+			Padding(0, 1).
+			BorderTop(true).
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(lipgloss.Color("#E5E7EB"))
 
 	StatusSeparatorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#D1D5DB"))
+				Foreground(lipgloss.Color("#D1D5DB"))
 
 	StatusConnectedStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#10B981"))
+				Foreground(lipgloss.Color("#10B981"))
 
 	StatusConnectingStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#F59E0B"))
+				Foreground(lipgloss.Color("#F59E0B"))
 
 	StatusDisconnectedStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280"))
+				Foreground(lipgloss.Color("#6B7280"))
 
 	StatusErrorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#EF4444"))
+				Foreground(lipgloss.Color("#EF4444"))
 
 	ModelInfoStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true)
+			Foreground(lipgloss.Color("#7C3AED")).
+			Bold(true)
 
 	UsageStatsStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#059669"))
+			Foreground(lipgloss.Color("#059669"))
 
 	PerformanceStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#3B82F6"))
+				Foreground(lipgloss.Color("#3B82F6"))
 
 	SystemStatusStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280"))
+				Foreground(lipgloss.Color("#6B7280"))
 
 	// Progress tracker styles
 	ProgressContainerStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#D1D5DB")).
-		Padding(1).
-		MarginBottom(1)
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#D1D5DB")).
+				Padding(1).
+				MarginBottom(1)
 
 	ProgressTitleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#374151")).
-		Bold(true)
+				Foreground(lipgloss.Color("#374151")).
+				Bold(true)
 
 	ProgressDetailsStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280"))
+				Foreground(lipgloss.Color("#6B7280"))
 
 	// Spinner styles
 	SpinnerContainerStyle = lipgloss.NewStyle().
-		Padding(1).
-		MarginBottom(1)
+				Padding(1).
+				MarginBottom(1)
 
 	SpinnerStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED"))
+			Foreground(lipgloss.Color("#7C3AED"))
 
 	SpinnerMessageStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#374151")).
-		Bold(true)
+				Foreground(lipgloss.Color("#374151")).
+				Bold(true)
 
 	SpinnerSubMessageStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		PaddingLeft(2)
+				Foreground(lipgloss.Color("#6B7280")).
+				PaddingLeft(2)
 
 	SpinnerTimeStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#9CA3AF")).
-		Italic(true)
+				Foreground(lipgloss.Color("#9CA3AF")).
+				Italic(true)
 
 	// Notification styles
 	NotificationInfoStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#3B82F6")).
-		Background(lipgloss.Color("#EFF6FF")).
-		Foreground(lipgloss.Color("#1E40AF")).
-		Padding(1).
-		MarginBottom(1)
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#3B82F6")).
+				Background(lipgloss.Color("#EFF6FF")).
+				Foreground(lipgloss.Color("#1E40AF")).
+				Padding(1).
+				MarginBottom(1)
 
 	NotificationSuccessStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#10B981")).
-		Background(lipgloss.Color("#ECFDF5")).
-		Foreground(lipgloss.Color("#065F46")).
-		Padding(1).
-		MarginBottom(1)
+					Border(lipgloss.RoundedBorder()).
+					BorderForeground(lipgloss.Color("#10B981")).
+					Background(lipgloss.Color("#ECFDF5")).
+					Foreground(lipgloss.Color("#065F46")).
+					Padding(1).
+					MarginBottom(1)
 
 	NotificationWarningStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#F59E0B")).
-		Background(lipgloss.Color("#FFFBEB")).
-		Foreground(lipgloss.Color("#92400E")).
-		Padding(1).
-		MarginBottom(1)
+					Border(lipgloss.RoundedBorder()).
+					BorderForeground(lipgloss.Color("#F59E0B")).
+					Background(lipgloss.Color("#FFFBEB")).
+					Foreground(lipgloss.Color("#92400E")).
+					Padding(1).
+					MarginBottom(1)
 
 	NotificationErrorStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#EF4444")).
-		Background(lipgloss.Color("#FEF2F2")).
-		Foreground(lipgloss.Color("#991B1B")).
-		Padding(1).
-		MarginBottom(1)
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#EF4444")).
+				Background(lipgloss.Color("#FEF2F2")).
+				Foreground(lipgloss.Color("#991B1B")).
+				Padding(1).
+				MarginBottom(1)
 
 	NotificationTitleStyle = lipgloss.NewStyle().
-		Bold(true)
+				Bold(true)
 
 	NotificationMessageStyle = lipgloss.NewStyle().
-		PaddingTop(1)
+					PaddingTop(1)
 
 	// Token usage styles
 	TokenUsageContainerStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#D1D5DB")).
-		Padding(1)
+					Border(lipgloss.RoundedBorder()).
+					BorderForeground(lipgloss.Color("#D1D5DB")).
+					Padding(1)
 
 	TokenUsageCompactStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#059669"))
+				Foreground(lipgloss.Color("#059669"))
 
 	TokenUsageTitleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#374151")).
-		Bold(true)
+				Foreground(lipgloss.Color("#374151")).
+				Bold(true)
 
 	TokenUsageRateLimitStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#F59E0B")).
-		Bold(true)
+					Foreground(lipgloss.Color("#F59E0B")).
+					Bold(true)
 
 	TokenUsageModelStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Italic(true)
+				Foreground(lipgloss.Color("#7C3AED")).
+				Italic(true)
 )
 
 // Helper functions for integration with app state
@@ -1060,7 +1060,7 @@ func NewStatusBarFromState(state *app.StatusState, width, height int) *StatusBar
 	sb.tokenCount = state.TokenCount
 	sb.estimatedCost = state.EstimatedCost
 	sb.requestCount = state.RequestCount
-	
+
 	return sb
 }
 

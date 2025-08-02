@@ -12,48 +12,48 @@ import (
 
 // Config represents the application configuration
 type Config struct {
-	DefaultProvider   string            `json:"default_provider"`
-	DefaultModel      string            `json:"default_model"`
-	Settings          *Settings         `json:"settings"`
-	UIPreferences     *UIPreferences    `json:"ui_preferences"`
-	Analytics         *AnalyticsConfig  `json:"analytics"`
-	Logging           *LoggingConfig    `json:"logging"`
+	DefaultProvider   string                 `json:"default_provider"`
+	DefaultModel      string                 `json:"default_model"`
+	Settings          *Settings              `json:"settings"`
+	UIPreferences     *UIPreferences         `json:"ui_preferences"`
+	Analytics         *AnalyticsConfig       `json:"analytics"`
+	Logging           *LoggingConfig         `json:"logging"`
 	CustomPreferences map[string]interface{} `json:"custom_preferences,omitempty"`
-	
+
 	// Direct access fields for backwards compatibility
-	EnableLogging     bool   `json:"enable_logging"`
-	EnableAnalytics   bool   `json:"enable_analytics"`
-	LogDirectory      string `json:"log_directory"`
-	MaxHistory        int    `json:"max_history"`
-	RequestTimeout    time.Duration `json:"request_timeout"`
-	
+	EnableLogging   bool          `json:"enable_logging"`
+	EnableAnalytics bool          `json:"enable_analytics"`
+	LogDirectory    string        `json:"log_directory"`
+	MaxHistory      int           `json:"max_history"`
+	RequestTimeout  time.Duration `json:"request_timeout"`
+
 	// API Key fields
-	AnthropicAPIKey   string `json:"anthropic_api_key"`
-	OpenAIAPIKey      string `json:"openai_api_key"`
-	OpenRouterAPIKey  string `json:"openrouter_api_key"`
-	
+	AnthropicAPIKey  string `json:"anthropic_api_key"`
+	OpenAIAPIKey     string `json:"openai_api_key"`
+	OpenRouterAPIKey string `json:"openrouter_api_key"`
+
 	// Feature flags
-	EnableWebSearch   bool   `json:"enable_web_search"`
-	BaseURL           string `json:"base_url"`
-	MaxRetries        int    `json:"max_retries"`
-	
+	EnableWebSearch bool   `json:"enable_web_search"`
+	BaseURL         string `json:"base_url"`
+	MaxRetries      int    `json:"max_retries"`
+
 	// UI preferences
-	Theme             string        `json:"theme"`
-	ShowTimestamps    bool          `json:"show_timestamps"`
-	SyntaxHighlighting bool         `json:"syntax_highlighting"`
-	ShowTokenCount    bool          `json:"show_token_count"`
-	AutoScroll        bool          `json:"auto_scroll"`
-	MaxLineLength     int           `json:"max_line_length"`
-	EnableAnimations  bool          `json:"enable_animations"`
-	ShowTypingIndicator bool        `json:"show_typing_indicator"`
-	AnimationSpeed    time.Duration `json:"animation_speed"`
-	
+	Theme               string        `json:"theme"`
+	ShowTimestamps      bool          `json:"show_timestamps"`
+	SyntaxHighlighting  bool          `json:"syntax_highlighting"`
+	ShowTokenCount      bool          `json:"show_token_count"`
+	AutoScroll          bool          `json:"auto_scroll"`
+	MaxLineLength       int           `json:"max_line_length"`
+	EnableAnimations    bool          `json:"enable_animations"`
+	ShowTypingIndicator bool          `json:"show_typing_indicator"`
+	AnimationSpeed      time.Duration `json:"animation_speed"`
+
 	// System settings
-	DebugMode         bool   `json:"debug_mode"`
-	ConfigDir         string `json:"config_dir"`
-	LogLevel          string `json:"log_level"`
-	UserAgent         string `json:"user_agent"`
-	
+	DebugMode bool   `json:"debug_mode"`
+	ConfigDir string `json:"config_dir"`
+	LogLevel  string `json:"log_level"`
+	UserAgent string `json:"user_agent"`
+
 	// Performance settings
 	StreamBufferSize      int           `json:"stream_buffer_size"`
 	MaxConcurrentRequests int           `json:"max_concurrent_requests"`
@@ -83,11 +83,11 @@ type UIPreferences struct {
 
 // AnalyticsConfig contains analytics settings
 type AnalyticsConfig struct {
-	Enabled             bool `json:"enabled"`
-	RetainDays          int  `json:"retain_days"`
-	MaxFileSizeMB       int  `json:"max_file_size_mb"`
-	EnableCostTracking  bool `json:"enable_cost_tracking"`
-	AnonymizeContent    bool `json:"anonymize_content"`
+	Enabled            bool `json:"enabled"`
+	RetainDays         int  `json:"retain_days"`
+	MaxFileSizeMB      int  `json:"max_file_size_mb"`
+	EnableCostTracking bool `json:"enable_cost_tracking"`
+	AnonymizeContent   bool `json:"anonymize_content"`
 }
 
 // LoggingConfig contains logging settings
@@ -202,11 +202,11 @@ func (cm *ConfigManager) getDefaultConfig() *Config {
 			SyntaxHighlight: true,
 		},
 		Analytics: &AnalyticsConfig{
-			Enabled:             true,
-			RetainDays:          30,
-			MaxFileSizeMB:       10,
-			EnableCostTracking:  true,
-			AnonymizeContent:    false,
+			Enabled:            true,
+			RetainDays:         30,
+			MaxFileSizeMB:      10,
+			EnableCostTracking: true,
+			AnonymizeContent:   false,
 		},
 		Logging: &LoggingConfig{
 			Enabled:       true,
@@ -253,11 +253,11 @@ func (cm *ConfigManager) applyDefaults(config *Config) {
 
 	if config.Analytics == nil {
 		config.Analytics = &AnalyticsConfig{
-			Enabled:             true,
-			RetainDays:          30,
-			MaxFileSizeMB:       10,
-			EnableCostTracking:  true,
-			AnonymizeContent:    false,
+			Enabled:            true,
+			RetainDays:         30,
+			MaxFileSizeMB:      10,
+			EnableCostTracking: true,
+			AnonymizeContent:   false,
 		}
 	}
 

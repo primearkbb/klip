@@ -25,20 +25,20 @@ func (m *MockProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespons
 func (m *MockProvider) ChatStream(ctx context.Context, req *ChatRequest) (<-chan StreamChunk, <-chan error) {
 	chunkChan := make(chan StreamChunk, 1)
 	errorChan := make(chan error, 1)
-	
+
 	go func() {
 		defer close(chunkChan)
 		defer close(errorChan)
-		
+
 		if m.err != nil {
 			errorChan <- m.err
 			return
 		}
-		
+
 		chunkChan <- StreamChunk{Content: "test", Done: false}
 		chunkChan <- StreamChunk{Content: "", Done: true}
 	}()
-	
+
 	return chunkChan, errorChan
 }
 
@@ -157,10 +157,10 @@ func TestShouldRetry(t *testing.T) {
 	}
 
 	tests := []struct {
-		name         string
-		err          error
-		attempt      int
-		shouldRetry  bool
+		name        string
+		err         error
+		attempt     int
+		shouldRetry bool
 	}{
 		{
 			name:        "Network error should retry",

@@ -27,22 +27,22 @@ func (m *Model) initializeStorage() tea.Cmd {
 		// Initialize logger first
 		m.logger = log.New(os.Stderr)
 		m.logger.SetLevel(log.InfoLevel)
-		
+
 		// Initialize storage
 		storage, err := storage.New()
 		if err != nil {
 			m.logger.Error("Failed to initialize storage", "error", err)
 			return initErrorMsg{fmt.Errorf("storage initialization failed: %w", err)}
 		}
-		
+
 		m.storage = storage
-		
+
 		// Initialize storage components
 		if err := m.storage.Initialize(); err != nil {
 			m.logger.Error("Failed to initialize storage components", "error", err)
 			return initErrorMsg{fmt.Errorf("storage component initialization failed: %w", err)}
 		}
-		
+
 		m.logger.Info("Storage system initialized successfully")
 		return initKeystoreMsg{}
 	})
@@ -54,29 +54,29 @@ func (m *Model) initializeKeystore() tea.Cmd {
 		if m.storage == nil || m.storage.KeyStore == nil {
 			return initErrorMsg{fmt.Errorf("keystore not available")}
 		}
-		
+
 		// Check for existing API keys
 		providers := []api.Provider{api.ProviderAnthropic, api.ProviderOpenAI, api.ProviderOpenRouter}
 		hasAnyKey := false
-		
+
 		for _, provider := range providers {
 			hasKey, err := m.storage.KeyStore.HasKey(string(provider))
 			if err != nil {
 				m.logger.Warn("Failed to check API key", "provider", provider, "error", err)
 				continue
 			}
-			
+
 			if hasKey {
 				hasAnyKey = true
 				m.logger.Debug("Found API key", "provider", provider)
 			}
 		}
-		
+
 		if !hasAnyKey {
 			m.logger.Warn("No API keys found - user will need to set them up")
 			// Don't fail initialization, just continue to onboarding
 		}
-		
+
 		m.logger.Info("Keystore initialized successfully")
 		return initConfigMsg{}
 	})
@@ -88,7 +88,7 @@ func (m *Model) initializeConfig() tea.Cmd {
 		if m.storage == nil || m.storage.ConfigManager == nil {
 			return initErrorMsg{fmt.Errorf("config manager not available")}
 		}
-		
+
 		// Load configuration
 		config, err := m.storage.ConfigManager.LoadConfig()
 		if err != nil {
@@ -106,18 +106,18 @@ func (m *Model) initializeConfig() tea.Cmd {
 					RetainDays: 30,
 				},
 			}
-			
+
 			// Save default config
 			if saveErr := m.storage.ConfigManager.SaveConfig(config); saveErr != nil {
 				m.logger.Warn("Failed to save default config", "error", saveErr)
 			}
 		}
-		
+
 		m.config = config
-		
+
 		// Apply configuration
 		m.applyConfiguration(config)
-		
+
 		m.logger.Info("Configuration loaded successfully")
 		return initAnalyticsMsg{}
 	})
@@ -129,13 +129,13 @@ func (m *Model) initializeAnalytics() tea.Cmd {
 		if m.storage == nil || m.storage.AnalyticsLogger == nil {
 			return initErrorMsg{fmt.Errorf("analytics logger not available")}
 		}
-		
+
 		// Start analytics session
 		if m.analyticsEnabled {
 			// TODO: Implement session start logging when method is available
 			m.logger.Debug("Analytics enabled")
 		}
-		
+
 		m.logger.Info("Analytics initialized successfully")
 		return initAPIClientMsg{}
 	})
@@ -146,7 +146,7 @@ func (m *Model) initializeAPIClient() tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		// Set default model
 		m.currentModel = m.getDefaultModel()
-		
+
 		// Initialize API client for the default model
 		if err := m.initAPIClientForModel(m.currentModel); err != nil {
 			m.logger.Warn("Failed to initialize API client", "error", err, "model", m.currentModel.Name)
@@ -154,7 +154,7 @@ func (m *Model) initializeAPIClient() tea.Cmd {
 		} else {
 			m.logger.Info("API client initialized", "model", m.currentModel.Name, "provider", m.currentModel.Provider)
 		}
-		
+
 		return initCompleteMsg{}
 	})
 }
@@ -164,17 +164,17 @@ func (m *Model) initAPIClientForModel(model api.Model) error {
 	if m.storage == nil || m.storage.KeyStore == nil {
 		return fmt.Errorf("keystore not available")
 	}
-	
+
 	// Get API key for the model's provider
 	apiKey, err := m.storage.KeyStore.GetKey(string(model.Provider))
 	if err != nil {
 		return fmt.Errorf("failed to get API key for %s: %w", model.Provider, err)
 	}
-	
+
 	if apiKey == "" {
 		return fmt.Errorf("no API key found for provider %s", model.Provider)
 	}
-	
+
 	// Create HTTP client
 	httpClient := &http.Client{
 		Timeout: 120 * time.Second,
@@ -182,7 +182,7 @@ func (m *Model) initAPIClientForModel(model api.Model) error {
 
 	// Create provider-specific client
 	var provider api.ProviderInterface
-	
+
 	switch model.Provider {
 	case api.ProviderAnthropic:
 		provider, err = providers.NewAnthropicProvider(apiKey, httpClient)
@@ -193,19 +193,19 @@ func (m *Model) initAPIClientForModel(model api.Model) error {
 	default:
 		return fmt.Errorf("unsupported provider: %s", model.Provider)
 	}
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to create provider client: %w", err)
 	}
-	
+
 	// Validate credentials
 	ctx, cancel := context.WithTimeout(m.ctx, 10*time.Second)
 	defer cancel()
-	
+
 	if err := provider.ValidateCredentials(ctx); err != nil {
 		return fmt.Errorf("credential validation failed: %w", err)
 	}
-	
+
 	m.apiClient = provider
 	return nil
 }
@@ -217,7 +217,7 @@ func (m *Model) getDefaultModel() api.Model {
 		// TODO: Look up model by ID from available models
 		// For now, return a hardcoded default
 	}
-	
+
 	// Return Claude 3.5 Sonnet as default
 	return api.Model{
 		ID:            "claude-3-5-sonnet-20241022",
@@ -233,12 +233,12 @@ func (m *Model) applyConfiguration(config *storage.Config) {
 	if config.Analytics != nil {
 		m.analyticsEnabled = config.Analytics.Enabled
 	}
-	
+
 	// Apply UI configuration
 	if config.UIPreferences != nil {
 		// UI config will be used in rendering
 	}
-	
+
 	// Apply other configuration options as needed
 }
 
@@ -246,11 +246,11 @@ func (m *Model) applyConfiguration(config *storage.Config) {
 func (m *Model) loadAvailableModels() tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		var allModels []api.Model
-		
+
 		// Get static models first
 		staticModels := m.getStaticModels()
 		allModels = append(allModels, staticModels...)
-		
+
 		// Try to load dynamic models from providers that support it
 		if m.storage != nil && m.storage.KeyStore != nil {
 			// Check OpenRouter for dynamic models
@@ -262,7 +262,7 @@ func (m *Model) loadAvailableModels() tea.Cmd {
 				}
 			}
 		}
-		
+
 		m.logger.Info("Loaded models", "count", len(allModels))
 		return modelsLoadSuccessMsg{allModels}
 	})
@@ -293,7 +293,7 @@ func (m *Model) getStaticModels() []api.Model {
 			MaxTokens:     4096,
 			ContextWindow: 200000,
 		},
-		
+
 		// OpenAI models
 		{
 			ID:            "gpt-4o",
@@ -316,7 +316,7 @@ func (m *Model) getStaticModels() []api.Model {
 			MaxTokens:     4096,
 			ContextWindow: 128000,
 		},
-		
+
 		// Popular OpenRouter models
 		{
 			ID:            "anthropic/claude-3.5-sonnet",
@@ -340,28 +340,28 @@ func (m *Model) loadOpenRouterModels() ([]api.Model, error) {
 	if m.storage == nil || m.storage.KeyStore == nil {
 		return nil, fmt.Errorf("keystore not available")
 	}
-	
+
 	apiKey, err := m.storage.KeyStore.GetKey(string(api.ProviderOpenRouter))
 	if err != nil || apiKey == "" {
 		return nil, fmt.Errorf("no OpenRouter API key found")
 	}
-	
+
 	// Create OpenRouter provider
 	httpClient := &http.Client{Timeout: 30 * time.Second}
 	provider, err := providers.NewOpenRouterProvider(apiKey, httpClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create OpenRouter provider: %w", err)
 	}
-	
+
 	// Get models with timeout
 	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
 	defer cancel()
-	
+
 	models, err := provider.GetModels(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch OpenRouter models: %w", err)
 	}
-	
+
 	return models, nil
 }
 
@@ -372,22 +372,22 @@ func (m *Model) performAPIRequest(request *api.ChatRequest) tea.Cmd {
 			return apiErrorMsg{fmt.Errorf("no API client available")}
 		}
 	}
-	
+
 	// Handle streaming request
 	if request.Stream {
 		return m.performStreamingRequest(request)
 	}
-	
+
 	// Handle non-streaming request
 	return tea.Cmd(func() tea.Msg {
 		ctx, cancel := context.WithTimeout(m.ctx, 60*time.Second)
 		defer cancel()
-		
+
 		response, err := m.apiClient.Chat(ctx, request)
 		if err != nil {
 			return apiErrorMsg{err}
 		}
-		
+
 		return apiResponseMsg{response}
 	})
 }
@@ -397,7 +397,7 @@ func (m *Model) performStreamingRequest(request *api.ChatRequest) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		ctx, cancel := context.WithCancel(m.ctx)
 		defer cancel()
-		
+
 		// Set up interrupt handling
 		go func() {
 			select {
@@ -406,9 +406,9 @@ func (m *Model) performStreamingRequest(request *api.ChatRequest) tea.Cmd {
 			case <-ctx.Done():
 			}
 		}()
-		
+
 		chunkChan, errChan := m.apiClient.ChatStream(ctx, request)
-		
+
 		// Start a goroutine to handle the stream
 		go func() {
 			for {
@@ -418,35 +418,35 @@ func (m *Model) performStreamingRequest(request *api.ChatRequest) tea.Cmd {
 						// Stream finished
 						return
 					}
-					
+
 					// Send chunk to UI
 					tea.Batch(func() tea.Msg {
 						return apiStreamChunkMsg{chunk.Content}
 					})()
-					
+
 					if chunk.Done {
 						tea.Batch(func() tea.Msg {
 							return apiStreamDoneMsg{}
 						})()
 						return
 					}
-					
+
 				case err, ok := <-errChan:
 					if !ok {
 						return
 					}
-					
+
 					tea.Batch(func() tea.Msg {
 						return apiErrorMsg{err}
 					})()
 					return
-					
+
 				case <-ctx.Done():
 					return
 				}
 			}
 		}()
-		
+
 		// Return immediately to keep UI responsive
 		return nil
 	})
@@ -459,13 +459,13 @@ func (m *Model) switchModel(model api.Model) tea.Cmd {
 		if err := m.initAPIClientForModel(model); err != nil {
 			return apiErrorMsg{fmt.Errorf("failed to switch to model %s: %w", model.Name, err)}
 		}
-		
+
 		// Update current model
 		m.currentModel = model
-		
+
 		// Log the model switch
 		// TODO: Implement model switch logging when method is available
-		
+
 		return modelSwitchMsg{model}
 	})
 }
@@ -482,7 +482,7 @@ func (m *Model) checkForUpdates() tea.Cmd {
 func (m *Model) validateSystemRequirements() error {
 	// Check if we can write to the config directory
 	// TODO: Implement config directory validation when GetConfigDir method is available
-	
+
 	return nil
 }
 
@@ -492,14 +492,14 @@ func (m *Model) migrateFromDeno() tea.Cmd {
 		if m.storage == nil || m.storage.ConfigManager == nil {
 			return nil
 		}
-		
+
 		// Attempt migration
 		if err := m.storage.ConfigManager.MigrateFromDeno(); err != nil {
 			m.logger.Warn("Failed to migrate from Deno", "error", err)
 		} else {
 			m.logger.Info("Successfully migrated configuration from Deno")
 		}
-		
+
 		return nil
 	})
 }
@@ -508,6 +508,6 @@ func (m *Model) migrateFromDeno() tea.Cmd {
 func (m *Model) setupSignalHandling() {
 	// This would typically be done at the program level, not in the model
 	// But we can prepare for it here by ensuring cleanup is ready
-	
+
 	// The cleanup function is already implemented in the model
 }

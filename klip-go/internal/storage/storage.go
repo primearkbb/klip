@@ -50,7 +50,7 @@ func New() (*Storage, error) {
 	if config != nil && config.Analytics != nil {
 		analyticsConfig = config.Analytics
 	}
-	
+
 	analyticsLogger, err := NewAnalyticsLogger(analyticsConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize analytics logger: %w", err)

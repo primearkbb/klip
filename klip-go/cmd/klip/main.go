@@ -13,13 +13,13 @@ import (
 
 var (
 	titleStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#7C3AED")).
-		MarginBottom(1)
+			Bold(true).
+			Foreground(lipgloss.Color("#7C3AED")).
+			MarginBottom(1)
 
 	bannerStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#8B5CF6")).
-		MarginBottom(1)
+			Foreground(lipgloss.Color("#8B5CF6")).
+			MarginBottom(1)
 )
 
 const banner = `

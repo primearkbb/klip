@@ -207,11 +207,11 @@ var PredefinedModels = map[string]Model{
 
 // ModelManager handles model discovery and caching
 type ModelManager struct {
-	providers       map[Provider]ProviderInterface
-	cachedModels    map[Provider][]Model
-	cacheExpiry     map[Provider]time.Time
-	cacheMutex      sync.RWMutex
-	cacheDuration   time.Duration
+	providers     map[Provider]ProviderInterface
+	cachedModels  map[Provider][]Model
+	cacheExpiry   map[Provider]time.Time
+	cacheMutex    sync.RWMutex
+	cacheDuration time.Duration
 }
 
 // NewModelManager creates a new model manager
@@ -337,7 +337,7 @@ func (mm *ModelManager) GetModelProviders() []Provider {
 func (mm *ModelManager) ClearCache() {
 	mm.cacheMutex.Lock()
 	defer mm.cacheMutex.Unlock()
-	
+
 	mm.cachedModels = make(map[Provider][]Model)
 	mm.cacheExpiry = make(map[Provider]time.Time)
 }
@@ -346,7 +346,7 @@ func (mm *ModelManager) ClearCache() {
 func (mm *ModelManager) ClearProviderCache(provider Provider) {
 	mm.cacheMutex.Lock()
 	defer mm.cacheMutex.Unlock()
-	
+
 	delete(mm.cachedModels, provider)
 	delete(mm.cacheExpiry, provider)
 }

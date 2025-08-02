@@ -8,7 +8,7 @@ import (
 
 func setupTestAnalyticsLogger(t *testing.T) (*AnalyticsLogger, string) {
 	tempDir := t.TempDir()
-	
+
 	// Mock home directory
 	oldHome := os.Getenv("HOME")
 	os.Setenv("HOME", tempDir)
@@ -17,11 +17,11 @@ func setupTestAnalyticsLogger(t *testing.T) (*AnalyticsLogger, string) {
 	})
 
 	config := &AnalyticsConfig{
-		Enabled:             true,
-		RetainDays:          365, // Use longer retention to avoid cleanup during tests
-		MaxFileSizeMB:       10,
-		EnableCostTracking:  true,
-		AnonymizeContent:    false,
+		Enabled:            true,
+		RetainDays:         365, // Use longer retention to avoid cleanup during tests
+		MaxFileSizeMB:      10,
+		EnableCostTracking: true,
+		AnonymizeContent:   false,
 	}
 
 	analyticsLogger, err := NewAnalyticsLogger(config)
@@ -36,17 +36,17 @@ func TestAnalyticsLogger_LogRequest(t *testing.T) {
 	analyticsLogger, _ := setupTestAnalyticsLogger(t)
 
 	metrics := RequestMetrics{
-		StartTime:                 time.Now(),
-		ModelID:                   "claude-3-5-sonnet-20241022",
-		ModelName:                 "Claude 3.5 Sonnet",
-		Provider:                  "anthropic",
-		MessageCount:              2,
-		UserMessageLength:         100,
-		TotalConversationLength:   200,
-		HasSystemMessage:          true,
-		Temperature:               0.7,
-		MaxTokens:                 4096,
-		IsStream:                  true,
+		StartTime:               time.Now(),
+		ModelID:                 "claude-3-5-sonnet-20241022",
+		ModelName:               "Claude 3.5 Sonnet",
+		Provider:                "anthropic",
+		MessageCount:            2,
+		UserMessageLength:       100,
+		TotalConversationLength: 200,
+		HasSystemMessage:        true,
+		Temperature:             0.7,
+		MaxTokens:               4096,
+		IsStream:                true,
 	}
 
 	err := analyticsLogger.LogRequest(metrics)
@@ -87,17 +87,17 @@ func TestAnalyticsLogger_LogResponse(t *testing.T) {
 
 	startTime := time.Now()
 	requestMetrics := RequestMetrics{
-		StartTime:                 startTime,
-		ModelID:                   "claude-3-5-sonnet-20241022",
-		ModelName:                 "Claude 3.5 Sonnet",
-		Provider:                  "anthropic",
-		MessageCount:              1,
-		UserMessageLength:         50,
-		TotalConversationLength:   50,
-		HasSystemMessage:          false,
-		Temperature:               0.7,
-		MaxTokens:                 4096,
-		IsStream:                  true,
+		StartTime:               startTime,
+		ModelID:                 "claude-3-5-sonnet-20241022",
+		ModelName:               "Claude 3.5 Sonnet",
+		Provider:                "anthropic",
+		MessageCount:            1,
+		UserMessageLength:       50,
+		TotalConversationLength: 50,
+		HasSystemMessage:        false,
+		Temperature:             0.7,
+		MaxTokens:               4096,
+		IsStream:                true,
 	}
 
 	responseMetrics := ResponseMetrics{
@@ -255,20 +255,20 @@ func TestAnalyticsLogger_GetUsageStats(t *testing.T) {
 
 	// Log some test events
 	startTime := time.Now()
-	
+
 	// Log request
 	requestMetrics := RequestMetrics{
-		StartTime:                 startTime,
-		ModelID:                   "claude-3-5-sonnet-20241022",
-		ModelName:                 "Claude 3.5 Sonnet",
-		Provider:                  "anthropic",
-		MessageCount:              1,
-		UserMessageLength:         50,
-		TotalConversationLength:   50,
-		HasSystemMessage:          false,
-		Temperature:               0.7,
-		MaxTokens:                 4096,
-		IsStream:                  true,
+		StartTime:               startTime,
+		ModelID:                 "claude-3-5-sonnet-20241022",
+		ModelName:               "Claude 3.5 Sonnet",
+		Provider:                "anthropic",
+		MessageCount:            1,
+		UserMessageLength:       50,
+		TotalConversationLength: 50,
+		HasSystemMessage:        false,
+		Temperature:             0.7,
+		MaxTokens:               4096,
+		IsStream:                true,
 	}
 
 	err := analyticsLogger.LogRequest(requestMetrics)
@@ -356,7 +356,7 @@ func TestAnalyticsLogger_GetUsageStats(t *testing.T) {
 
 func TestAnalyticsLogger_DisabledConfig(t *testing.T) {
 	tempDir := t.TempDir()
-	
+
 	// Mock home directory
 	oldHome := os.Getenv("HOME")
 	os.Setenv("HOME", tempDir)
@@ -366,11 +366,11 @@ func TestAnalyticsLogger_DisabledConfig(t *testing.T) {
 
 	// Create analytics logger with disabled config
 	config := &AnalyticsConfig{
-		Enabled:             false,
-		RetainDays:          30,
-		MaxFileSizeMB:       10,
-		EnableCostTracking:  true,
-		AnonymizeContent:    false,
+		Enabled:            false,
+		RetainDays:         30,
+		MaxFileSizeMB:      10,
+		EnableCostTracking: true,
+		AnonymizeContent:   false,
 	}
 
 	analyticsLogger, err := NewAnalyticsLogger(config)
@@ -380,17 +380,17 @@ func TestAnalyticsLogger_DisabledConfig(t *testing.T) {
 
 	// Try to log events - should not error but should not create files
 	requestMetrics := RequestMetrics{
-		StartTime:                 time.Now(),
-		ModelID:                   "claude-3-5-sonnet-20241022",
-		ModelName:                 "Claude 3.5 Sonnet",
-		Provider:                  "anthropic",
-		MessageCount:              1,
-		UserMessageLength:         50,
-		TotalConversationLength:   50,
-		HasSystemMessage:          false,
-		Temperature:               0.7,
-		MaxTokens:                 4096,
-		IsStream:                  true,
+		StartTime:               time.Now(),
+		ModelID:                 "claude-3-5-sonnet-20241022",
+		ModelName:               "Claude 3.5 Sonnet",
+		Provider:                "anthropic",
+		MessageCount:            1,
+		UserMessageLength:       50,
+		TotalConversationLength: 50,
+		HasSystemMessage:        false,
+		Temperature:             0.7,
+		MaxTokens:               4096,
+		IsStream:                true,
 	}
 
 	err = analyticsLogger.LogRequest(requestMetrics)
@@ -462,17 +462,17 @@ func TestAnalyticsLogger_ErrorLogging(t *testing.T) {
 
 	startTime := time.Now()
 	requestMetrics := RequestMetrics{
-		StartTime:                 startTime,
-		ModelID:                   "claude-3-5-sonnet-20241022",
-		ModelName:                 "Claude 3.5 Sonnet",
-		Provider:                  "anthropic",
-		MessageCount:              1,
-		UserMessageLength:         50,
-		TotalConversationLength:   50,
-		HasSystemMessage:          false,
-		Temperature:               0.7,
-		MaxTokens:                 4096,
-		IsStream:                  true,
+		StartTime:               startTime,
+		ModelID:                 "claude-3-5-sonnet-20241022",
+		ModelName:               "Claude 3.5 Sonnet",
+		Provider:                "anthropic",
+		MessageCount:            1,
+		UserMessageLength:       50,
+		TotalConversationLength: 50,
+		HasSystemMessage:        false,
+		Temperature:             0.7,
+		MaxTokens:               4096,
+		IsStream:                true,
 	}
 
 	responseMetrics := ResponseMetrics{

@@ -14,32 +14,32 @@ import (
 // Custom message types for the application
 type (
 	// Initialization messages
-	initStartMsg        struct{}
-	initStorageMsg      struct{}
-	initKeystoreMsg     struct{}
-	initConfigMsg       struct{}
-	initAnalyticsMsg    struct{}
-	initAPIClientMsg    struct{}
-	initCompleteMsg     struct{}
-	initErrorMsg        struct{ error }
+	initStartMsg     struct{}
+	initStorageMsg   struct{}
+	initKeystoreMsg  struct{}
+	initConfigMsg    struct{}
+	initAnalyticsMsg struct{}
+	initAPIClientMsg struct{}
+	initCompleteMsg  struct{}
+	initErrorMsg     struct{ error }
 
 	// API messages
-	apiRequestMsg      struct{ request *api.ChatRequest }
-	apiResponseMsg     struct{ response *api.ChatResponse }
-	apiStreamChunkMsg  struct{ chunk string }
-	apiStreamDoneMsg   struct{}
-	apiErrorMsg        struct{ error }
+	apiRequestMsg     struct{ request *api.ChatRequest }
+	apiResponseMsg    struct{ response *api.ChatResponse }
+	apiStreamChunkMsg struct{ chunk string }
+	apiStreamDoneMsg  struct{}
+	apiErrorMsg       struct{ error }
 
 	// Model management messages
-	modelsLoadStartMsg    struct{}
-	modelsLoadSuccessMsg  struct{ models []api.Model }
-	modelsLoadErrorMsg    struct{ error }
-	modelSwitchMsg        struct{ model api.Model }
+	modelsLoadStartMsg   struct{}
+	modelsLoadSuccessMsg struct{ models []api.Model }
+	modelsLoadErrorMsg   struct{ error }
+	modelSwitchMsg       struct{ model api.Model }
 
 	// Settings messages
-	settingsLoadMsg       struct{}
-	settingsUpdateMsg     struct{ config *storage.Config }
-	settingsSaveMsg       struct{}
+	settingsLoadMsg   struct{}
+	settingsUpdateMsg struct{ config *storage.Config }
+	settingsSaveMsg   struct{}
 
 	// History messages
 	historyLoadStartMsg   struct{}
@@ -249,7 +249,7 @@ func (m *Model) handleChatState(msg tea.Msg) tea.Cmd {
 				Timestamp: time.Now(),
 			}
 			m.chatState.AddMessage(assistantMsg)
-			
+
 			// Log the message (convert to storage format)
 			if m.storage != nil && m.storage.ChatLogger != nil {
 				go func() {
@@ -282,7 +282,7 @@ func (m *Model) handleChatKeys(msg tea.KeyMsg) tea.Cmd {
 		if m.chatState.WaitingForAPI {
 			return nil
 		}
-		
+
 		input := strings.TrimSpace(m.inputBuffer)
 		if input == "" {
 			return nil
@@ -523,7 +523,7 @@ func (m *Model) handleAPIMessages(msg tea.Msg) tea.Cmd {
 				Timestamp: time.Now(),
 			}
 			m.chatState.AddMessage(assistantMsg)
-			
+
 			// Log the message (convert to storage format)
 			if m.storage != nil && m.storage.ChatLogger != nil {
 				go func() {

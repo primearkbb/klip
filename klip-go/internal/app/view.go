@@ -12,25 +12,25 @@ import (
 // Color palette for consistent theming
 var (
 	// Primary colors
-	primaryColor   = lipgloss.Color("#7C3AED")  // Purple
-	secondaryColor = lipgloss.Color("#10B981")  // Green
-	accentColor    = lipgloss.Color("#F59E0B")  // Amber
-	errorColor     = lipgloss.Color("#EF4444")  // Red
-	warningColor   = lipgloss.Color("#F97316")  // Orange
-	
+	primaryColor   = lipgloss.Color("#7C3AED") // Purple
+	secondaryColor = lipgloss.Color("#10B981") // Green
+	accentColor    = lipgloss.Color("#F59E0B") // Amber
+	errorColor     = lipgloss.Color("#EF4444") // Red
+	warningColor   = lipgloss.Color("#F97316") // Orange
+
 	// Text colors
-	textPrimary   = lipgloss.Color("#F9FAFB")   // Light gray
-	textSecondary = lipgloss.Color("#9CA3AF")   // Medium gray
-	textMuted     = lipgloss.Color("#6B7280")   // Dark gray
-	
+	textPrimary   = lipgloss.Color("#F9FAFB") // Light gray
+	textSecondary = lipgloss.Color("#9CA3AF") // Medium gray
+	textMuted     = lipgloss.Color("#6B7280") // Dark gray
+
 	// Background colors
-	bgPrimary   = lipgloss.Color("#111827")     // Dark blue-gray
-	bgSecondary = lipgloss.Color("#1F2937")     // Medium blue-gray
-	bgAccent    = lipgloss.Color("#374151")     // Light blue-gray
-	
+	bgPrimary   = lipgloss.Color("#111827") // Dark blue-gray
+	bgSecondary = lipgloss.Color("#1F2937") // Medium blue-gray
+	bgAccent    = lipgloss.Color("#374151") // Light blue-gray
+
 	// Border colors
-	borderPrimary   = lipgloss.Color("#4B5563")  // Medium gray
-	borderSecondary = lipgloss.Color("#6B7280")  // Light gray
+	borderPrimary   = lipgloss.Color("#4B5563") // Medium gray
+	borderSecondary = lipgloss.Color("#6B7280") // Light gray
 )
 
 // Base styles
@@ -92,10 +92,10 @@ func (m *Model) View() string {
 
 	// Create the main container
 	content := m.renderStateView()
-	
+
 	// Add status bar at the bottom
 	statusBar := m.renderStatusBar()
-	
+
 	// Combine everything
 	mainStyle := baseStyle.Copy().
 		Width(m.width).
@@ -142,17 +142,17 @@ func (m *Model) renderInitializingView() string {
 
 	progress := m.loadingState.Progress
 	step := m.loadingState.CurrentStep.String()
-	
+
 	// ASCII art header
 	header := titleStyle.Render("🚀 Klip") + "\n" +
 		subtitleStyle.Render("Terminal AI Chat") + "\n\n"
 
 	// Progress bar
 	progressBar := m.renderProgressBar(progress, 40)
-	
+
 	// Current step
 	stepText := fmt.Sprintf("Step: %s", step)
-	
+
 	// Elapsed time
 	elapsedText := ""
 	if !m.loadingState.StartTime.IsZero() {
@@ -175,7 +175,7 @@ func (m *Model) renderInitializingView() string {
 // renderOnboardingView renders the onboarding view
 func (m *Model) renderOnboardingView() string {
 	header := titleStyle.Render("Welcome to Klip!") + "\n\n"
-	
+
 	content := header +
 		"Let's get you set up:\n\n" +
 		"1. Set up your API keys\n" +
@@ -189,13 +189,13 @@ func (m *Model) renderOnboardingView() string {
 // renderChatView renders the main chat interface
 func (m *Model) renderChatView() string {
 	contentHeight := m.height - 4 // Reserve space for input and status bar
-	
+
 	// Chat messages area
 	messagesView := m.renderMessages(contentHeight - 3)
-	
+
 	// Input area
 	inputView := m.renderInputArea()
-	
+
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		messagesView,
@@ -210,17 +210,17 @@ func (m *Model) renderMessages(height int) string {
 			"Welcome! Start chatting with AI or type /help for commands.\n" +
 			fmt.Sprintf("Current model: %s", successStyle.Render(m.currentModel.Name)) + "\n\n" +
 			mutedStyle.Render("Commands: /help, /model, /clear, /history")
-		
+
 		return m.centerContent(welcome)
 	}
 
 	var messageViews []string
-	
+
 	for _, msg := range m.chatState.Messages {
 		messageView := m.renderSingleMessage(msg)
 		messageViews = append(messageViews, messageView)
 	}
-	
+
 	// Add streaming buffer if active
 	if m.chatState.IsStreaming && m.chatState.StreamBuffer != "" {
 		streamingMsg := api.Message{
@@ -233,7 +233,7 @@ func (m *Model) renderMessages(height int) string {
 	}
 
 	content := strings.Join(messageViews, "\n\n")
-	
+
 	// Scroll to bottom if content is too long
 	lines := strings.Split(content, "\n")
 	if len(lines) > height {
@@ -248,7 +248,7 @@ func (m *Model) renderMessages(height int) string {
 func (m *Model) renderSingleMessage(msg api.Message) string {
 	var roleStyle lipgloss.Style
 	var rolePrefix string
-	
+
 	switch msg.Role {
 	case "user":
 		roleStyle = successStyle.Bold(true)
@@ -266,13 +266,13 @@ func (m *Model) renderSingleMessage(msg api.Message) string {
 
 	// Format timestamp
 	timestamp := mutedStyle.Render(msg.Timestamp.Format("15:04"))
-	
+
 	// Header line
 	header := fmt.Sprintf("%s %s:", roleStyle.Render(rolePrefix), timestamp)
-	
+
 	// Message content (word wrap)
 	content := m.wrapText(msg.Content, m.width-4)
-	
+
 	return header + "\n" + content
 }
 
@@ -281,7 +281,7 @@ func (m *Model) renderInputArea() string {
 	// Input prompt based on mode
 	var prompt string
 	var style lipgloss.Style
-	
+
 	if m.chatState.WaitingForAPI {
 		prompt = "Thinking..."
 		style = warningStyle
@@ -303,7 +303,7 @@ func (m *Model) renderInputArea() string {
 	// Input field
 	inputText := m.inputBuffer
 	cursor := ""
-	
+
 	if !m.chatState.WaitingForAPI {
 		// Show cursor
 		if m.cursorPos < len(inputText) {
@@ -319,22 +319,22 @@ func (m *Model) renderInputArea() string {
 	}
 
 	inputField := focusedInputStyle.Width(m.width - len(prompt) - 4).Render(cursor)
-	
+
 	return fmt.Sprintf("%s: %s", style.Render(prompt), inputField)
 }
 
 // renderModelsView renders the model selection view
 func (m *Model) renderModelsView() string {
 	header := titleStyle.Render("Model Selection") + "\n\n"
-	
+
 	if m.modelsState.Loading {
 		return header + m.renderLoading("Loading models...")
 	}
-	
+
 	if m.modelsState.Error != nil {
 		return header + errorStyle.Render(fmt.Sprintf("Error: %v", m.modelsState.Error))
 	}
-	
+
 	if len(m.modelsState.FilteredModels) == 0 {
 		return header + mutedStyle.Render("No models available")
 	}
@@ -350,7 +350,7 @@ func (m *Model) renderModelsView() string {
 	for i, model := range m.modelsState.FilteredModels {
 		prefix := "  "
 		style := lipgloss.NewStyle()
-		
+
 		if i == m.modelsState.SelectedIndex {
 			prefix = "▶ "
 			style = selectedButtonStyle
@@ -358,14 +358,14 @@ func (m *Model) renderModelsView() string {
 			prefix = "✓ "
 			style = successStyle
 		}
-		
+
 		name := fmt.Sprintf("%s (%s)", model.Name, model.Provider)
 		item := fmt.Sprintf("%s%s", prefix, style.Render(name))
 		modelItems = append(modelItems, item)
 	}
 
 	modelList := strings.Join(modelItems, "\n")
-	
+
 	footer := "\n\n" + mutedStyle.Render("↑/↓: Navigate | Enter: Select | /: Search | Esc: Back")
 
 	return header + searchBar + modelList + footer
@@ -374,7 +374,7 @@ func (m *Model) renderModelsView() string {
 // renderSettingsView renders the settings view
 func (m *Model) renderSettingsView() string {
 	header := titleStyle.Render("Settings") + "\n\n"
-	
+
 	content := "Settings configuration coming soon...\n\n" +
 		"Current configuration:\n" +
 		fmt.Sprintf("• Model: %s\n", m.currentModel.Name) +
@@ -390,11 +390,11 @@ func (m *Model) renderSettingsView() string {
 // renderHistoryView renders the chat history view
 func (m *Model) renderHistoryView() string {
 	header := titleStyle.Render("Chat History") + "\n\n"
-	
+
 	if m.historyState.Loading {
 		return header + m.renderLoading("Loading history...")
 	}
-	
+
 	if m.historyState.Error != nil {
 		return header + errorStyle.Render(fmt.Sprintf("Error: %v", m.historyState.Error))
 	}
@@ -410,14 +410,14 @@ func (m *Model) renderHistoryView() string {
 // renderHelpView renders the help view
 func (m *Model) renderHelpView() string {
 	header := titleStyle.Render("Klip Help") + "\n\n"
-	
+
 	sections := []string{
 		"🎯 Commands:",
 		"  /help     - Show this help",
 		"  /model    - Switch AI model",
 		"  /models   - List all models",
 		"  /clear    - Clear chat history",
-		"  /history  - View chat history",  
+		"  /history  - View chat history",
 		"  /settings - Open settings",
 		"  /quit     - Exit application",
 		"",
@@ -451,7 +451,7 @@ func (m *Model) renderErrorView() string {
 	}
 
 	header := errorStyle.Render("Error") + "\n\n"
-	
+
 	errorMsg := fmt.Sprintf("Error: %v", m.errorState.Error)
 	context := ""
 	if m.errorState.Context != "" {
@@ -483,12 +483,12 @@ func (m *Model) renderStatusBar() string {
 	}
 
 	rightItems := []string{}
-	
+
 	// Add status message if active
 	if m.hasActiveStatusMessage() {
 		rightItems = append(rightItems, m.statusMessage)
 	}
-	
+
 	// Debug info
 	if m.showDebugInfo {
 		rightItems = append(rightItems, fmt.Sprintf("Debug: %dx%d", m.width, m.height))
@@ -524,7 +524,7 @@ func (m *Model) renderStatusBar() string {
 func (m *Model) renderLoading(message string) string {
 	spinners := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
 	spinner := spinners[m.animationFrame%len(spinners)]
-	
+
 	spinnerStyle := lipgloss.NewStyle().Foreground(primaryColor)
 	content := fmt.Sprintf("%s %s", spinnerStyle.Render(spinner), message)
 	return m.centerContent(content)
@@ -546,7 +546,7 @@ func (m *Model) renderProgressBar(progress float64, width int) string {
 		mutedStyle.Render(strings.Repeat("░", empty))
 
 	percentage := fmt.Sprintf("%.0f%%", progress*100)
-	
+
 	return fmt.Sprintf("%s %s", bar, mutedStyle.Render(percentage))
 }
 
@@ -592,7 +592,7 @@ func (m *Model) wrapText(text string, width int) string {
 
 	for _, word := range words {
 		wordLength := len(word)
-		
+
 		// If adding this word would exceed the width, start a new line
 		if currentLength > 0 && currentLength+wordLength+1 > width {
 			lines = append(lines, strings.Join(currentLine, " "))

@@ -15,39 +15,39 @@ import (
 
 // AnalyticsEvent represents a single analytics event
 type AnalyticsEvent struct {
-	Timestamp   time.Time              `json:"timestamp"`
-	EventType   string                 `json:"event_type"`
-	SessionID   string                 `json:"session_id"`
-	ModelID     string                 `json:"model_id,omitempty"`
-	ModelName   string                 `json:"model_name,omitempty"`
-	Provider    string                 `json:"provider,omitempty"`
-	RequestData *RequestData           `json:"request_data,omitempty"`
-	ResponseData *ResponseData         `json:"response_data,omitempty"`
-	ErrorData   *ErrorData             `json:"error_data,omitempty"`
-	CostData    *CostData              `json:"cost_data,omitempty"`
-	CommandData *CommandData           `json:"command_data,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Timestamp    time.Time              `json:"timestamp"`
+	EventType    string                 `json:"event_type"`
+	SessionID    string                 `json:"session_id"`
+	ModelID      string                 `json:"model_id,omitempty"`
+	ModelName    string                 `json:"model_name,omitempty"`
+	Provider     string                 `json:"provider,omitempty"`
+	RequestData  *RequestData           `json:"request_data,omitempty"`
+	ResponseData *ResponseData          `json:"response_data,omitempty"`
+	ErrorData    *ErrorData             `json:"error_data,omitempty"`
+	CostData     *CostData              `json:"cost_data,omitempty"`
+	CommandData  *CommandData           `json:"command_data,omitempty"`
+	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // RequestData contains request-specific metrics
 type RequestData struct {
-	MessageCount              int     `json:"message_count"`
-	UserMessageLength         int     `json:"user_message_length"`
-	TotalConversationLength   int     `json:"total_conversation_length"`
-	HasSystemMessage          bool    `json:"has_system_message"`
-	Temperature               float64 `json:"temperature,omitempty"`
-	MaxTokens                 int     `json:"max_tokens,omitempty"`
+	MessageCount            int     `json:"message_count"`
+	UserMessageLength       int     `json:"user_message_length"`
+	TotalConversationLength int     `json:"total_conversation_length"`
+	HasSystemMessage        bool    `json:"has_system_message"`
+	Temperature             float64 `json:"temperature,omitempty"`
+	MaxTokens               int     `json:"max_tokens,omitempty"`
 }
 
 // ResponseData contains response-specific metrics
 type ResponseData struct {
-	ResponseLength int  `json:"response_length"`
-	TokensInput    int  `json:"tokens_input,omitempty"`
-	TokensOutput   int  `json:"tokens_output,omitempty"`
-	TotalTokens    int  `json:"total_tokens,omitempty"`
+	ResponseLength int   `json:"response_length"`
+	TokensInput    int   `json:"tokens_input,omitempty"`
+	TokensOutput   int   `json:"tokens_output,omitempty"`
+	TotalTokens    int   `json:"total_tokens,omitempty"`
 	LatencyMs      int64 `json:"latency_ms"`
-	IsStream       bool `json:"is_stream"`
-	Interrupted    bool `json:"interrupted"`
+	IsStream       bool  `json:"is_stream"`
+	Interrupted    bool  `json:"interrupted"`
 }
 
 // ErrorData contains error-specific information
@@ -75,17 +75,17 @@ type CommandData struct {
 
 // RequestMetrics contains metrics for tracking a request
 type RequestMetrics struct {
-	StartTime                 time.Time
-	ModelID                   string
-	ModelName                 string
-	Provider                  string
-	MessageCount              int
-	UserMessageLength         int
-	TotalConversationLength   int
-	HasSystemMessage          bool
-	Temperature               float64
-	MaxTokens                 int
-	IsStream                  bool
+	StartTime               time.Time
+	ModelID                 string
+	ModelName               string
+	Provider                string
+	MessageCount            int
+	UserMessageLength       int
+	TotalConversationLength int
+	HasSystemMessage        bool
+	Temperature             float64
+	MaxTokens               int
+	IsStream                bool
 }
 
 // ResponseMetrics contains metrics for tracking a response
@@ -132,30 +132,30 @@ var costEstimates = map[string]CostEstimate{
 	"gpt-4o-mini":  {Input: 0.15, Output: 0.6, Currency: "USD"},
 
 	// OpenRouter models (varies, using approximate values)
-	"anthropic/claude-3.5-sonnet":           {Input: 3.0, Output: 15.0, Currency: "USD"},
-	"openai/gpt-4o":                         {Input: 2.5, Output: 10.0, Currency: "USD"},
-	"meta-llama/llama-3.1-405b-instruct":    {Input: 2.7, Output: 2.7, Currency: "USD"},
+	"anthropic/claude-3.5-sonnet":        {Input: 3.0, Output: 15.0, Currency: "USD"},
+	"openai/gpt-4o":                      {Input: 2.5, Output: 10.0, Currency: "USD"},
+	"meta-llama/llama-3.1-405b-instruct": {Input: 2.7, Output: 2.7, Currency: "USD"},
 }
 
 // AnalyticsLogger handles collection and storage of analytics data
 type AnalyticsLogger struct {
-	analyticsDir   string
-	sessionID      string
-	config         *AnalyticsConfig
-	currentDate    string
-	pendingEvents  []AnalyticsEvent
-	logger         *log.Logger
+	analyticsDir  string
+	sessionID     string
+	config        *AnalyticsConfig
+	currentDate   string
+	pendingEvents []AnalyticsEvent
+	logger        *log.Logger
 }
 
 // NewAnalyticsLogger creates a new AnalyticsLogger instance
 func NewAnalyticsLogger(config *AnalyticsConfig) (*AnalyticsLogger, error) {
 	if config == nil {
 		config = &AnalyticsConfig{
-			Enabled:             true,
-			RetainDays:          30,
-			MaxFileSizeMB:       10,
-			EnableCostTracking:  true,
-			AnonymizeContent:    false,
+			Enabled:            true,
+			RetainDays:         30,
+			MaxFileSizeMB:      10,
+			EnableCostTracking: true,
+			AnonymizeContent:   false,
 		}
 	}
 
@@ -220,12 +220,12 @@ func (al *AnalyticsLogger) LogRequest(metrics RequestMetrics) error {
 		ModelName: metrics.ModelName,
 		Provider:  metrics.Provider,
 		RequestData: &RequestData{
-			MessageCount:              metrics.MessageCount,
-			UserMessageLength:         metrics.UserMessageLength,
-			TotalConversationLength:   metrics.TotalConversationLength,
-			HasSystemMessage:          metrics.HasSystemMessage,
-			Temperature:               metrics.Temperature,
-			MaxTokens:                 metrics.MaxTokens,
+			MessageCount:            metrics.MessageCount,
+			UserMessageLength:       metrics.UserMessageLength,
+			TotalConversationLength: metrics.TotalConversationLength,
+			HasSystemMessage:        metrics.HasSystemMessage,
+			Temperature:             metrics.Temperature,
+			MaxTokens:               metrics.MaxTokens,
 		},
 		ResponseData: &ResponseData{
 			ResponseLength: 0,
@@ -260,12 +260,12 @@ func (al *AnalyticsLogger) LogResponse(requestMetrics RequestMetrics, responseMe
 		ModelName: requestMetrics.ModelName,
 		Provider:  requestMetrics.Provider,
 		RequestData: &RequestData{
-			MessageCount:              requestMetrics.MessageCount,
-			UserMessageLength:         requestMetrics.UserMessageLength,
-			TotalConversationLength:   requestMetrics.TotalConversationLength,
-			HasSystemMessage:          requestMetrics.HasSystemMessage,
-			Temperature:               requestMetrics.Temperature,
-			MaxTokens:                 requestMetrics.MaxTokens,
+			MessageCount:            requestMetrics.MessageCount,
+			UserMessageLength:       requestMetrics.UserMessageLength,
+			TotalConversationLength: requestMetrics.TotalConversationLength,
+			HasSystemMessage:        requestMetrics.HasSystemMessage,
+			Temperature:             requestMetrics.Temperature,
+			MaxTokens:               requestMetrics.MaxTokens,
 		},
 		ResponseData: &ResponseData{
 			ResponseLength: responseMetrics.ResponseLength,
@@ -599,14 +599,14 @@ func (al *AnalyticsLogger) GetUsageStats(days int) (map[string]interface{}, erro
 	}
 
 	stats := map[string]interface{}{
-		"total_requests":   0,
-		"total_tokens":     0,
-		"total_cost":       0.0,
-		"avg_latency":      0.0,
-		"error_rate":       0.0,
-		"models_used":      make(map[string]int),
-		"daily_usage":      make(map[string]int),
-		"providers_used":   make(map[string]int),
+		"total_requests": 0,
+		"total_tokens":   0,
+		"total_cost":     0.0,
+		"avg_latency":    0.0,
+		"error_rate":     0.0,
+		"models_used":    make(map[string]int),
+		"daily_usage":    make(map[string]int),
+		"providers_used": make(map[string]int),
 	}
 
 	var totalLatency int64

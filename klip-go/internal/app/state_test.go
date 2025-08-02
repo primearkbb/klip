@@ -161,7 +161,7 @@ func TestStateHistoryLimit(t *testing.T) {
 
 	// History should be limited
 	assert.Equal(t, 3, len(sm.history))
-	
+
 	// Should contain the most recent states
 	expectedHistory := []AppState{StateModels, StateChat, StateSettings}
 	assert.Equal(t, expectedHistory, sm.history)
@@ -169,7 +169,7 @@ func TestStateHistoryLimit(t *testing.T) {
 
 func TestInputMode(t *testing.T) {
 	modes := []InputMode{InputModeNormal, InputModeCommand, InputModeSearch, InputModeMultiline}
-	
+
 	// Test that all modes are distinct
 	seen := make(map[InputMode]bool)
 	for _, mode := range modes {
@@ -220,14 +220,14 @@ func TestChatStateOperations(t *testing.T) {
 	// Test ClearMessages
 	chatState.ClearMessages()
 	assert.Equal(t, 0, len(chatState.Messages))
-	
+
 	lastUser = chatState.GetLastUserMessage()
 	assert.Nil(t, lastUser)
 }
 
 func TestModelsStateFiltering(t *testing.T) {
 	modelsState := NewModelsState()
-	
+
 	// Add test models
 	models := []api.Model{
 		{ID: "gpt-4", Name: "GPT-4", Provider: api.ProviderOpenAI},
@@ -235,7 +235,7 @@ func TestModelsStateFiltering(t *testing.T) {
 		{ID: "gpt-3.5-turbo", Name: "GPT-3.5 Turbo", Provider: api.ProviderOpenAI},
 		{ID: "claude-3-haiku", Name: "Claude 3 Haiku", Provider: api.ProviderAnthropic},
 	}
-	
+
 	modelsState.AvailableModels = models
 
 	// Test no filter (should show all)
@@ -245,15 +245,15 @@ func TestModelsStateFiltering(t *testing.T) {
 	// Test filter by name
 	modelsState.FilterModels("GPT")
 	assert.Equal(t, 2, len(modelsState.FilteredModels))
-	
+
 	// Test filter by ID
 	modelsState.FilterModels("claude")
 	assert.Equal(t, 2, len(modelsState.FilteredModels))
-	
+
 	// Test filter by provider
 	modelsState.FilterModels("openai")
 	assert.Equal(t, 2, len(modelsState.FilteredModels))
-	
+
 	// Test filter with no matches
 	modelsState.FilterModels("nonexistent")
 	assert.Equal(t, 0, len(modelsState.FilteredModels))
@@ -267,13 +267,13 @@ func TestModelsStateFiltering(t *testing.T) {
 
 func TestModelsStateSelection(t *testing.T) {
 	modelsState := NewModelsState()
-	
+
 	models := []api.Model{
 		{ID: "model1", Name: "Model 1"},
 		{ID: "model2", Name: "Model 2"},
 		{ID: "model3", Name: "Model 3"},
 	}
-	
+
 	modelsState.AvailableModels = models
 	modelsState.FilterModels("")
 
@@ -302,7 +302,7 @@ func TestModelsStateSelection(t *testing.T) {
 
 func TestLoadingStateProgression(t *testing.T) {
 	loadingState := NewLoadingState("Test operation")
-	
+
 	// Test initial state
 	assert.True(t, loadingState.IsLoading)
 	assert.Equal(t, 0.0, loadingState.Progress)
@@ -327,10 +327,10 @@ func TestLoadingStateProgression(t *testing.T) {
 
 func TestLoadingStateError(t *testing.T) {
 	loadingState := NewLoadingState("Test operation")
-	
+
 	err := assert.AnError
 	loadingState.SetError(err)
-	
+
 	assert.False(t, loadingState.IsLoading)
 	assert.Equal(t, err, loadingState.Error)
 }
@@ -340,7 +340,7 @@ func TestLoadingStateError(t *testing.T) {
 func BenchmarkStateManagerTransition(b *testing.B) {
 	sm := NewStateManager()
 	states := []AppState{StateChat, StateModels, StateSettings, StateHistory, StateHelp}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		state := states[i%len(states)]
@@ -350,13 +350,13 @@ func BenchmarkStateManagerTransition(b *testing.B) {
 
 func BenchmarkStateManagerBack(b *testing.B) {
 	sm := NewStateManager()
-	
+
 	// Build up some history
 	for i := 0; i < 10; i++ {
 		sm.Transition(StateChat)
 		sm.Transition(StateModels)
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		if !sm.Back() {
@@ -369,7 +369,7 @@ func BenchmarkStateManagerBack(b *testing.B) {
 
 func BenchmarkModelsFiltering(b *testing.B) {
 	modelsState := NewModelsState()
-	
+
 	// Create many test models
 	models := make([]api.Model, 1000)
 	for i := 0; i < 1000; i++ {
@@ -380,7 +380,7 @@ func BenchmarkModelsFiltering(b *testing.B) {
 		}
 	}
 	modelsState.AvailableModels = models
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		query := fmt.Sprintf("model-%d", i%100)

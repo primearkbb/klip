@@ -8,7 +8,7 @@ import (
 
 func setupTestKeyStore(t *testing.T) (*KeyStore, string) {
 	tempDir := t.TempDir()
-	
+
 	// Mock home directory
 	oldHome := os.Getenv("HOME")
 	os.Setenv("HOME", tempDir)

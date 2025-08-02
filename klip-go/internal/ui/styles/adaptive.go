@@ -45,15 +45,15 @@ type ResponsiveBreakpoints struct {
 
 // ResponsiveConfig holds configuration for each breakpoint
 type ResponsiveConfig struct {
-	MinWidth        int
-	MaxWidth        int
-	SidebarWidth    int
-	PanelPadding    [4]int
+	MinWidth         int
+	MaxWidth         int
+	SidebarWidth     int
+	PanelPadding     [4]int
 	ComponentSpacing int
-	FontScale       float64
-	ShowSidebar     bool
-	ShowDecorations bool
-	CompactMode     bool
+	FontScale        float64
+	ShowSidebar      bool
+	ShowDecorations  bool
+	CompactMode      bool
 }
 
 // ColorDepthLevel represents different color depth options
@@ -61,9 +61,9 @@ type ColorDepthLevel int
 
 const (
 	ColorDepthMonochrome ColorDepthLevel = iota
-	ColorDepthBasic      // 16 colors
-	ColorDepth256        // 256 colors
-	ColorDepthTrueColor  // 16.7M colors
+	ColorDepthBasic                      // 16 colors
+	ColorDepth256                        // 256 colors
+	ColorDepthTrueColor                  // 16.7M colors
 )
 
 // NewAdaptiveStyler creates a new adaptive styler
@@ -73,45 +73,45 @@ func NewAdaptiveStyler(theme *Theme, width, height int) *AdaptiveStyler {
 		width:  width,
 		height: height,
 	}
-	
+
 	// Detect terminal capabilities
 	as.capabilities = as.detectTerminalCapabilities()
 	as.profile = termenv.ColorProfile()
-	
+
 	// Configure performance settings based on capabilities
 	as.performance = as.configurePerformanceSettings()
-	
+
 	return as
 }
 
 // detectTerminalCapabilities analyzes the terminal environment
 func (as *AdaptiveStyler) detectTerminalCapabilities() *TerminalCapabilities {
 	caps := &TerminalCapabilities{}
-	
+
 	// Detect color support
 	profile := termenv.ColorProfile()
 	caps.HasTrueColor = profile == termenv.TrueColor
 	caps.Has256Color = profile >= termenv.ANSI256
 	caps.HasBasicColor = profile >= termenv.ANSI
 	caps.IsMonochrome = profile == termenv.Ascii
-	
+
 	// Detect terminal type
 	term := strings.ToLower(os.Getenv("TERM"))
 	termProgram := strings.ToLower(os.Getenv("TERM_PROGRAM"))
-	
+
 	caps.TerminalType = term
 	if termProgram != "" {
 		caps.TerminalType = termProgram
 	}
-	
+
 	// Platform detection
 	caps.Platform = runtime.GOOS
 	caps.Architecture = runtime.GOARCH
-	
+
 	// SSH detection
 	caps.IsSSH = os.Getenv("SSH_CLIENT") != "" || os.Getenv("SSH_TTY") != ""
 	caps.IsRemote = caps.IsSSH || os.Getenv("REMOTE_HOST") != ""
-	
+
 	// Feature detection based on terminal type
 	caps.SupportsUnicode = as.detectUnicodeSupport(term)
 	caps.SupportsEmoji = as.detectEmojiSupport(term)
@@ -121,12 +121,12 @@ func (as *AdaptiveStyler) detectTerminalCapabilities() *TerminalCapabilities {
 	caps.SupportsBlink = as.detectStyleSupport(term, "blink")
 	caps.SupportsStrike = as.detectStyleSupport(term, "strike")
 	caps.SupportsBoxDrawing = as.detectBoxDrawingSupport(term)
-	
+
 	// Performance characteristics
 	caps.IsSlowTerminal = as.detectSlowTerminal(term)
 	caps.HasLowBandwidth = caps.IsRemote || caps.IsSSH
 	caps.LimitedBuffer = as.detectLimitedBuffer(term)
-	
+
 	return caps
 }
 
@@ -142,54 +142,54 @@ func (as *AdaptiveStyler) configurePerformanceSettings() *PerformanceSettings {
 		UseSimpleChars:       false,
 		ReduceColors:         false,
 	}
-	
+
 	// Adjust based on terminal capabilities
 	if as.capabilities.IsSlowTerminal {
 		settings.EnableAnimations = false
 		settings.MaxFrameRate = 15
 		settings.BatchUpdates = true
 	}
-	
+
 	if as.capabilities.HasLowBandwidth {
 		settings.EnableGradients = false
 		settings.EnableComplexBorders = false
 		settings.UseSimpleChars = true
 		settings.BatchUpdates = true
 	}
-	
+
 	if as.capabilities.LimitedBuffer {
 		settings.UseSimpleChars = true
 		settings.ReduceColors = true
 	}
-	
+
 	if as.capabilities.IsMonochrome {
 		settings.EnableGradients = false
 		settings.ReduceColors = true
 	}
-	
+
 	if !as.capabilities.SupportsUnicode {
 		settings.EnableUnicodeChars = false
 		settings.UseSimpleChars = true
 	}
-	
+
 	// Check environment overrides
 	if os.Getenv("KLIP_NO_ANIMATIONS") == "true" {
 		settings.EnableAnimations = false
 	}
-	
+
 	if os.Getenv("KLIP_SIMPLE_MODE") == "true" {
 		settings.UseSimpleChars = true
 		settings.EnableGradients = false
 		settings.EnableComplexBorders = false
 	}
-	
+
 	return settings
 }
 
 // GetResponsiveConfig returns configuration for current screen size
 func (as *AdaptiveStyler) GetResponsiveConfig() ResponsiveConfig {
 	breakpoints := as.getResponsiveBreakpoints()
-	
+
 	switch {
 	case as.width < 30:
 		return breakpoints.Tiny
@@ -208,59 +208,59 @@ func (as *AdaptiveStyler) GetResponsiveConfig() ResponsiveConfig {
 func (as *AdaptiveStyler) getResponsiveBreakpoints() ResponsiveBreakpoints {
 	return ResponsiveBreakpoints{
 		Tiny: ResponsiveConfig{
-			MinWidth:        0,
-			MaxWidth:        29,
-			SidebarWidth:    0,
-			PanelPadding:    [4]int{0, 1, 0, 1},
+			MinWidth:         0,
+			MaxWidth:         29,
+			SidebarWidth:     0,
+			PanelPadding:     [4]int{0, 1, 0, 1},
 			ComponentSpacing: 1,
-			FontScale:       0.8,
-			ShowSidebar:     false,
-			ShowDecorations: false,
-			CompactMode:     true,
+			FontScale:        0.8,
+			ShowSidebar:      false,
+			ShowDecorations:  false,
+			CompactMode:      true,
 		},
 		Small: ResponsiveConfig{
-			MinWidth:        30,
-			MaxWidth:        59,
-			SidebarWidth:    0,
-			PanelPadding:    [4]int{1, 1, 1, 1},
+			MinWidth:         30,
+			MaxWidth:         59,
+			SidebarWidth:     0,
+			PanelPadding:     [4]int{1, 1, 1, 1},
 			ComponentSpacing: 1,
-			FontScale:       0.9,
-			ShowSidebar:     false,
-			ShowDecorations: true,
-			CompactMode:     true,
+			FontScale:        0.9,
+			ShowSidebar:      false,
+			ShowDecorations:  true,
+			CompactMode:      true,
 		},
 		Medium: ResponsiveConfig{
-			MinWidth:        60,
-			MaxWidth:        99,
-			SidebarWidth:    20,
-			PanelPadding:    [4]int{1, 2, 1, 2},
+			MinWidth:         60,
+			MaxWidth:         99,
+			SidebarWidth:     20,
+			PanelPadding:     [4]int{1, 2, 1, 2},
 			ComponentSpacing: 2,
-			FontScale:       1.0,
-			ShowSidebar:     true,
-			ShowDecorations: true,
-			CompactMode:     false,
+			FontScale:        1.0,
+			ShowSidebar:      true,
+			ShowDecorations:  true,
+			CompactMode:      false,
 		},
 		Large: ResponsiveConfig{
-			MinWidth:        100,
-			MaxWidth:        139,
-			SidebarWidth:    25,
-			PanelPadding:    [4]int{2, 3, 2, 3},
+			MinWidth:         100,
+			MaxWidth:         139,
+			SidebarWidth:     25,
+			PanelPadding:     [4]int{2, 3, 2, 3},
 			ComponentSpacing: 3,
-			FontScale:       1.0,
-			ShowSidebar:     true,
-			ShowDecorations: true,
-			CompactMode:     false,
+			FontScale:        1.0,
+			ShowSidebar:      true,
+			ShowDecorations:  true,
+			CompactMode:      false,
 		},
 		Huge: ResponsiveConfig{
-			MinWidth:        140,
-			MaxWidth:        999,
-			SidebarWidth:    30,
-			PanelPadding:    [4]int{2, 4, 2, 4},
+			MinWidth:         140,
+			MaxWidth:         999,
+			SidebarWidth:     30,
+			PanelPadding:     [4]int{2, 4, 2, 4},
 			ComponentSpacing: 4,
-			FontScale:       1.1,
-			ShowSidebar:     true,
-			ShowDecorations: true,
-			CompactMode:     false,
+			FontScale:        1.1,
+			ShowSidebar:      true,
+			ShowDecorations:  true,
+			CompactMode:      false,
 		},
 	}
 }
@@ -268,17 +268,17 @@ func (as *AdaptiveStyler) getResponsiveBreakpoints() ResponsiveBreakpoints {
 // AdaptTheme adapts a theme to terminal capabilities
 func (as *AdaptiveStyler) AdaptTheme(theme *Theme) *Theme {
 	adaptedTheme := *theme // Copy theme
-	
+
 	// Adapt colors based on color depth
 	colorDepth := as.getColorDepth()
 	adaptedTheme.Colors = as.adaptColorPalette(theme.Colors, colorDepth)
-	
+
 	// Adapt components based on performance settings
 	adaptedTheme.Components = as.adaptComponentStyles(theme.Components)
-	
+
 	// Adapt spacing based on screen size
 	adaptedTheme.Spacing = as.adaptSpacing(theme.Spacing)
-	
+
 	return &adaptedTheme
 }
 
@@ -318,7 +318,7 @@ func (as *AdaptiveStyler) convertToMonochrome(colors ColorPalette) ColorPalette 
 	gray := lipgloss.Color("#808080")
 	lightGray := lipgloss.Color("#C0C0C0")
 	darkGray := lipgloss.Color("#404040")
-	
+
 	return ColorPalette{
 		Primary:          black,
 		PrimaryLight:     gray,
@@ -372,13 +372,13 @@ func (as *AdaptiveStyler) convertToBasicColors(colors ColorPalette) ColorPalette
 		Accent:           lipgloss.Color("6"),  // Cyan
 		AccentLight:      lipgloss.Color("14"), // Bright Cyan
 		AccentDark:       lipgloss.Color("6"),
-		Background:       lipgloss.Color("0"),  // Black/White based on theme
-		BackgroundAlt:    lipgloss.Color("8"),  // Gray
+		Background:       lipgloss.Color("0"), // Black/White based on theme
+		BackgroundAlt:    lipgloss.Color("8"), // Gray
 		BackgroundSubtle: lipgloss.Color("8"),
 		Surface:          lipgloss.Color("0"),
 		SurfaceAlt:       lipgloss.Color("8"),
 		SurfaceSubtle:    lipgloss.Color("8"),
-		Text:             lipgloss.Color("7"),  // White/Black based on theme
+		Text:             lipgloss.Color("7"), // White/Black based on theme
 		TextSubtle:       lipgloss.Color("8"),
 		TextMuted:        lipgloss.Color("8"),
 		TextInverse:      lipgloss.Color("0"),
@@ -388,8 +388,8 @@ func (as *AdaptiveStyler) convertToBasicColors(colors ColorPalette) ColorPalette
 		Success:          lipgloss.Color("2"),  // Green
 		SuccessLight:     lipgloss.Color("10"), // Bright Green
 		SuccessDark:      lipgloss.Color("2"),
-		Error:            lipgloss.Color("1"),  // Red
-		ErrorLight:       lipgloss.Color("9"),  // Bright Red
+		Error:            lipgloss.Color("1"), // Red
+		ErrorLight:       lipgloss.Color("9"), // Bright Red
 		ErrorDark:        lipgloss.Color("1"),
 		Warning:          lipgloss.Color("3"),  // Yellow
 		WarningLight:     lipgloss.Color("11"), // Bright Yellow
@@ -414,24 +414,24 @@ func (as *AdaptiveStyler) convertTo256Colors(colors ColorPalette) ColorPalette {
 // adaptComponentStyles adapts component styling based on capabilities
 func (as *AdaptiveStyler) adaptComponentStyles(components ComponentStyles) ComponentStyles {
 	adapted := components
-	
+
 	// Simplify borders for limited terminals
 	if !as.capabilities.SupportsBoxDrawing || as.performance.UseSimpleChars {
 		adapted.BorderStyle = lipgloss.NormalBorder()
 		adapted.BorderRadius = 0
 	}
-	
+
 	// Disable shadows for performance
 	if as.performance.UseSimpleChars || as.capabilities.IsSlowTerminal {
 		adapted.ShadowEnabled = false
 	}
-	
+
 	// Reduce animation speed for slow terminals
 	if as.capabilities.IsSlowTerminal {
 		adapted.AnimationSpeed = "slow"
 		adapted.TransitionDuration = "500ms"
 	}
-	
+
 	return adapted
 }
 
@@ -439,7 +439,7 @@ func (as *AdaptiveStyler) adaptComponentStyles(components ComponentStyles) Compo
 func (as *AdaptiveStyler) adaptSpacing(spacing Spacing) Spacing {
 	config := as.GetResponsiveConfig()
 	adapted := spacing
-	
+
 	// Scale spacing based on screen size
 	if config.CompactMode {
 		adapted.Base = max(1, spacing.Base/2)
@@ -450,13 +450,13 @@ func (as *AdaptiveStyler) adaptSpacing(spacing Spacing) Spacing {
 		adapted.XLarge = max(2, spacing.XLarge/2)
 		adapted.XXLarge = max(3, spacing.XXLarge/2)
 	}
-	
+
 	// Update component-specific spacing
 	copy(adapted.ButtonPadding[:], config.PanelPadding[:2])
 	copy(adapted.InputPadding[:], config.PanelPadding[:2])
 	copy(adapted.PanelPadding[:], config.PanelPadding[:])
 	adapted.ComponentSpacing = config.ComponentSpacing
-	
+
 	return adapted
 }
 
@@ -512,7 +512,7 @@ var (
 		ProgressEmpty: "░",
 		Ellipsis:      "…",
 	}
-	
+
 	ASCIICharacterSet = CharacterSet{
 		CheckMark:     "x",
 		CrossMark:     "X",
@@ -533,12 +533,12 @@ func (as *AdaptiveStyler) ShouldSkipFrame(frameCount int) bool {
 		// Skip every other frame for slow terminals
 		return frameCount%2 == 1
 	}
-	
+
 	if as.capabilities.HasLowBandwidth {
 		// Skip 2 out of 3 frames for low bandwidth
 		return frameCount%3 != 0
 	}
-	
+
 	return false
 }
 
@@ -556,7 +556,7 @@ func (as *AdaptiveStyler) OptimizeContent(content string) string {
 		content = strings.ReplaceAll(content, "◒", "p")
 		content = strings.ReplaceAll(content, "◓", "b")
 	}
-	
+
 	return content
 }
 
@@ -593,7 +593,7 @@ func (as *AdaptiveStyler) detectUnicodeSupport(term string) bool {
 		// Check for UTF-8 support via locale
 		lang := os.Getenv("LANG")
 		return strings.Contains(strings.ToUpper(lang), "UTF-8") ||
-			   strings.Contains(strings.ToUpper(lang), "UTF8")
+			strings.Contains(strings.ToUpper(lang), "UTF8")
 	}
 }
 
@@ -702,7 +702,7 @@ func (as *AdaptiveStyler) Resize(width, height int) {
 // PrintCapabilities outputs detected capabilities for debugging
 func (as *AdaptiveStyler) PrintCapabilities() string {
 	var b strings.Builder
-	
+
 	fmt.Fprintf(&b, "Terminal Capabilities:\n")
 	fmt.Fprintf(&b, "  Type: %s\n", as.capabilities.TerminalType)
 	fmt.Fprintf(&b, "  Platform: %s/%s\n", as.capabilities.Platform, as.capabilities.Architecture)
@@ -721,7 +721,6 @@ func (as *AdaptiveStyler) PrintCapabilities() string {
 	fmt.Fprintf(&b, "    Low Bandwidth: %v\n", as.capabilities.HasLowBandwidth)
 	fmt.Fprintf(&b, "    Animations: %v\n", as.performance.EnableAnimations)
 	fmt.Fprintf(&b, "    Max FPS: %d\n", as.performance.MaxFrameRate)
-	
+
 	return b.String()
 }
-

@@ -98,10 +98,10 @@ func ValidateProviderCredentials(providerType api.Provider, apiKey string, httpC
 	if err != nil {
 		return err
 	}
-	
+
 	// Use a context with timeout for validation
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	return provider.ValidateCredentials(ctx)
 }

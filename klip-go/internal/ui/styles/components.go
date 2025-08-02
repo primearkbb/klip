@@ -67,7 +67,7 @@ func (cs *ComponentStyler) Button(text string, variant ButtonStyle, size ButtonS
 		Padding(cs.getButtonPadding(size)...).
 		Align(lipgloss.Center).
 		Bold(true)
-	
+
 	// Apply variant styling
 	switch variant {
 	case ButtonPrimary:
@@ -82,7 +82,7 @@ func (cs *ComponentStyler) Button(text string, variant ButtonStyle, size ButtonS
 				Border(lipgloss.RoundedBorder()).
 				BorderForeground(cs.theme.Colors.PrimaryLight)
 		}
-		
+
 	case ButtonSecondary:
 		baseStyle = baseStyle.
 			Foreground(cs.theme.Colors.Text).
@@ -90,7 +90,7 @@ func (cs *ComponentStyler) Button(text string, variant ButtonStyle, size ButtonS
 		if state == ButtonStateHover {
 			baseStyle = baseStyle.Background(cs.theme.Colors.SecondaryDark)
 		}
-		
+
 	case ButtonSuccess:
 		baseStyle = baseStyle.
 			Foreground(cs.theme.Colors.TextInverse).
@@ -98,7 +98,7 @@ func (cs *ComponentStyler) Button(text string, variant ButtonStyle, size ButtonS
 		if state == ButtonStateHover {
 			baseStyle = baseStyle.Background(cs.theme.Colors.SuccessDark)
 		}
-		
+
 	case ButtonError:
 		baseStyle = baseStyle.
 			Foreground(cs.theme.Colors.TextInverse).
@@ -106,7 +106,7 @@ func (cs *ComponentStyler) Button(text string, variant ButtonStyle, size ButtonS
 		if state == ButtonStateHover {
 			baseStyle = baseStyle.Background(cs.theme.Colors.ErrorDark)
 		}
-		
+
 	case ButtonWarning:
 		baseStyle = baseStyle.
 			Foreground(cs.theme.Colors.TextInverse).
@@ -114,7 +114,7 @@ func (cs *ComponentStyler) Button(text string, variant ButtonStyle, size ButtonS
 		if state == ButtonStateHover {
 			baseStyle = baseStyle.Background(cs.theme.Colors.WarningDark)
 		}
-		
+
 	case ButtonInfo:
 		baseStyle = baseStyle.
 			Foreground(cs.theme.Colors.TextInverse).
@@ -122,7 +122,7 @@ func (cs *ComponentStyler) Button(text string, variant ButtonStyle, size ButtonS
 		if state == ButtonStateHover {
 			baseStyle = baseStyle.Background(cs.theme.Colors.InfoDark)
 		}
-		
+
 	case ButtonGhost:
 		baseStyle = baseStyle.
 			Foreground(cs.theme.Colors.Primary).
@@ -130,7 +130,7 @@ func (cs *ComponentStyler) Button(text string, variant ButtonStyle, size ButtonS
 		if state == ButtonStateHover {
 			baseStyle = baseStyle.Background(cs.theme.Colors.BackgroundSubtle)
 		}
-		
+
 	case ButtonOutline:
 		baseStyle = baseStyle.
 			Foreground(cs.theme.Colors.Primary).
@@ -142,7 +142,7 @@ func (cs *ComponentStyler) Button(text string, variant ButtonStyle, size ButtonS
 				Foreground(cs.theme.Colors.TextInverse).
 				Background(cs.theme.Colors.Primary)
 		}
-		
+
 	case ButtonLink:
 		baseStyle = baseStyle.
 			Foreground(cs.theme.Colors.Primary).
@@ -153,19 +153,19 @@ func (cs *ComponentStyler) Button(text string, variant ButtonStyle, size ButtonS
 			baseStyle = baseStyle.Foreground(cs.theme.Colors.PrimaryDark)
 		}
 	}
-	
+
 	// Handle disabled state
 	if state == ButtonStateDisabled {
 		baseStyle = baseStyle.
 			Foreground(cs.theme.Colors.TextMuted).
 			Background(cs.theme.Colors.BackgroundSubtle)
 	}
-	
+
 	// Handle loading state
 	if state == ButtonStateLoading {
 		text = cs.Spinner("small") + " " + text
 	}
-	
+
 	return baseStyle.Render(text)
 }
 
@@ -212,7 +212,7 @@ func (cs *ComponentStyler) Input(value, placeholder string, inputType InputType,
 	if width <= 0 {
 		width = 30 // Default width
 	}
-	
+
 	baseStyle := lipgloss.NewStyle().
 		Width(width).
 		Padding(cs.theme.Spacing.ButtonPadding[0], cs.theme.Spacing.ButtonPadding[1]).
@@ -220,28 +220,28 @@ func (cs *ComponentStyler) Input(value, placeholder string, inputType InputType,
 		Foreground(cs.theme.Colors.Text).
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(cs.theme.Colors.Border)
-	
+
 	// Apply state styling
 	switch state {
 	case InputStateFocus:
 		baseStyle = baseStyle.
 			BorderForeground(cs.theme.Colors.Primary)
-		
+
 	case InputStateError:
 		baseStyle = baseStyle.
 			BorderForeground(cs.theme.Colors.Error).
 			Background(cs.theme.Colors.BackgroundSubtle)
-		
+
 	case InputStateSuccess:
 		baseStyle = baseStyle.
 			BorderForeground(cs.theme.Colors.Success)
-		
+
 	case InputStateDisabled:
 		baseStyle = baseStyle.
 			Foreground(cs.theme.Colors.TextMuted).
 			Background(cs.theme.Colors.BackgroundSubtle)
 	}
-	
+
 	// Handle content
 	content := value
 	if content == "" && placeholder != "" {
@@ -250,12 +250,12 @@ func (cs *ComponentStyler) Input(value, placeholder string, inputType InputType,
 			baseStyle = baseStyle.Foreground(cs.theme.Colors.TextMuted)
 		}
 	}
-	
+
 	// Handle password masking
 	if inputType == InputTypePassword && value != "" {
 		content = strings.Repeat("•", len(value))
 	}
-	
+
 	// Handle textarea (multiline)
 	if inputType == InputTypeTextarea {
 		lines := strings.Split(content, "\n")
@@ -265,7 +265,7 @@ func (cs *ComponentStyler) Input(value, placeholder string, inputType InputType,
 		}
 		baseStyle = baseStyle.Height(height)
 	}
-	
+
 	return baseStyle.Render(content)
 }
 
@@ -275,34 +275,34 @@ func (cs *ComponentStyler) Label(text string, required bool) string {
 		Foreground(cs.theme.Colors.Text).
 		Bold(true).
 		MarginBottom(1)
-	
+
 	if required {
 		text += lipgloss.NewStyle().
 			Foreground(cs.theme.Colors.Error).
 			Render(" *")
 	}
-	
+
 	return style.Render(text)
 }
 
 // FormField creates a complete form field with label and input
 func (cs *ComponentStyler) FormField(label, value, placeholder string, inputType InputType, state InputState, required bool, width int) string {
 	var parts []string
-	
+
 	// Label
 	if label != "" {
 		parts = append(parts, cs.Label(label, required))
 	}
-	
+
 	// Input
 	parts = append(parts, cs.Input(value, placeholder, inputType, state, width))
-	
+
 	// Error message (if error state)
 	if state == InputStateError {
 		errorMsg := cs.ErrorMessage("Invalid input")
 		parts = append(parts, errorMsg)
 	}
-	
+
 	return strings.Join(parts, "\n")
 }
 
@@ -324,10 +324,10 @@ func (cs *ComponentStyler) ChatBubble(content, author string, bubbleType ChatBub
 	if maxWidth < 30 {
 		maxWidth = 30
 	}
-	
+
 	var bubbleStyle lipgloss.Style
 	var authorStyle lipgloss.Style
-	
+
 	// Configure styles based on bubble type
 	switch bubbleType {
 	case ChatBubbleUser:
@@ -340,12 +340,12 @@ func (cs *ComponentStyler) ChatBubble(content, author string, bubbleType ChatBub
 			BorderForeground(cs.theme.Colors.Primary).
 			Align(lipgloss.Right).
 			MarginLeft(10)
-		
+
 		authorStyle = lipgloss.NewStyle().
 			Foreground(cs.theme.Colors.Primary).
 			Bold(true).
 			Align(lipgloss.Right)
-		
+
 	case ChatBubbleAssistant:
 		bubbleStyle = lipgloss.NewStyle().
 			MaxWidth(maxWidth).
@@ -355,11 +355,11 @@ func (cs *ComponentStyler) ChatBubble(content, author string, bubbleType ChatBub
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(cs.theme.Colors.Border).
 			MarginRight(10)
-		
+
 		authorStyle = lipgloss.NewStyle().
 			Foreground(cs.theme.Colors.Secondary).
 			Bold(true)
-		
+
 	case ChatBubbleSystem:
 		bubbleStyle = lipgloss.NewStyle().
 			MaxWidth(maxWidth).
@@ -369,12 +369,12 @@ func (cs *ComponentStyler) ChatBubble(content, author string, bubbleType ChatBub
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(cs.theme.Colors.BorderSubtle).
 			Align(lipgloss.Center)
-		
+
 		authorStyle = lipgloss.NewStyle().
 			Foreground(cs.theme.Colors.TextMuted).
 			Bold(true).
 			Align(lipgloss.Center)
-		
+
 	case ChatBubbleError:
 		bubbleStyle = lipgloss.NewStyle().
 			MaxWidth(maxWidth).
@@ -383,14 +383,14 @@ func (cs *ComponentStyler) ChatBubble(content, author string, bubbleType ChatBub
 			Foreground(cs.theme.Colors.Error).
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(cs.theme.Colors.Error)
-		
+
 		authorStyle = lipgloss.NewStyle().
 			Foreground(cs.theme.Colors.Error).
 			Bold(true)
 	}
-	
+
 	var parts []string
-	
+
 	// Author and timestamp header
 	if author != "" {
 		header := author
@@ -401,10 +401,10 @@ func (cs *ComponentStyler) ChatBubble(content, author string, bubbleType ChatBub
 		}
 		parts = append(parts, authorStyle.Render(header))
 	}
-	
+
 	// Message content
 	parts = append(parts, bubbleStyle.Render(content))
-	
+
 	return strings.Join(parts, "\n")
 }
 
@@ -435,19 +435,19 @@ func (cs *ComponentStyler) List(items []string, listType ListType, selectedIndex
 	if len(items) == 0 {
 		return ""
 	}
-	
+
 	var styledItems []string
-	
+
 	for i, item := range items {
 		state := ListItemStateNormal
 		if i == selectedIndex {
 			state = ListItemStateSelected
 		}
-		
+
 		styledItem := cs.ListItem(item, listType, state, i)
 		styledItems = append(styledItems, styledItem)
 	}
-	
+
 	return strings.Join(styledItems, "\n")
 }
 
@@ -455,27 +455,27 @@ func (cs *ComponentStyler) List(items []string, listType ListType, selectedIndex
 func (cs *ComponentStyler) ListItem(text string, listType ListType, state ListItemState, index int) string {
 	var prefix string
 	var itemStyle lipgloss.Style
-	
+
 	// Base item style
 	itemStyle = lipgloss.NewStyle().
 		Foreground(cs.theme.Colors.Text).
 		Padding(0, 1)
-	
+
 	// Configure prefix and styling based on list type
 	switch listType {
 	case ListTypeUnordered:
 		prefix = "• "
-		
+
 	case ListTypeOrdered:
 		prefix = fmt.Sprintf("%d. ", index+1)
-		
+
 	case ListTypeChecklist:
 		if state == ListItemStateChecked {
 			prefix = "☑ "
 		} else {
 			prefix = "☐ "
 		}
-		
+
 	case ListTypeMenu:
 		if state == ListItemStateSelected {
 			prefix = "▶ "
@@ -483,7 +483,7 @@ func (cs *ComponentStyler) ListItem(text string, listType ListType, state ListIt
 			prefix = "  "
 		}
 	}
-	
+
 	// Apply state styling
 	switch state {
 	case ListItemStateSelected:
@@ -491,16 +491,16 @@ func (cs *ComponentStyler) ListItem(text string, listType ListType, state ListIt
 			Background(cs.theme.Colors.Selection).
 			Foreground(cs.theme.Colors.Primary).
 			Bold(true)
-		
+
 	case ListItemStateDisabled:
 		itemStyle = itemStyle.
 			Foreground(cs.theme.Colors.TextMuted)
-		
+
 	case ListItemStateChecked:
 		itemStyle = itemStyle.
 			Foreground(cs.theme.Colors.Success)
 	}
-	
+
 	return itemStyle.Render(prefix + text)
 }
 
@@ -521,41 +521,41 @@ func (cs *ComponentStyler) Card(title, content string, cardType CardType, width 
 	if width <= 0 {
 		width = cs.width - 4
 	}
-	
+
 	var cardStyle lipgloss.Style
-	
+
 	// Base card style
 	cardStyle = lipgloss.NewStyle().
 		Width(width).
 		Padding(cs.theme.Spacing.CardPadding[0], cs.theme.Spacing.CardPadding[1]).
 		Border(lipgloss.RoundedBorder())
-	
+
 	// Apply card type styling
 	switch cardType {
 	case CardTypeDefault:
 		cardStyle = cardStyle.
 			Background(cs.theme.Colors.Surface).
 			BorderForeground(cs.theme.Colors.Border)
-		
+
 	case CardTypeElevated:
 		cardStyle = cardStyle.
 			Background(cs.theme.Colors.Surface).
 			BorderForeground(cs.theme.Colors.BorderSubtle)
 		// In a real implementation, you'd add shadow effects here
-		
+
 	case CardTypeOutlined:
 		cardStyle = cardStyle.
 			Background(lipgloss.Color("")).
 			BorderForeground(cs.theme.Colors.Border)
-		
+
 	case CardTypeSubtle:
 		cardStyle = cardStyle.
 			Background(cs.theme.Colors.BackgroundSubtle).
 			BorderForeground(cs.theme.Colors.BorderSubtle)
 	}
-	
+
 	var parts []string
-	
+
 	// Card title
 	if title != "" {
 		titleStyle := lipgloss.NewStyle().
@@ -564,14 +564,14 @@ func (cs *ComponentStyler) Card(title, content string, cardType CardType, width 
 			MarginBottom(1)
 		parts = append(parts, titleStyle.Render(title))
 	}
-	
+
 	// Card content
 	if content != "" {
 		contentStyle := lipgloss.NewStyle().
 			Foreground(cs.theme.Colors.Text)
 		parts = append(parts, contentStyle.Render(content))
 	}
-	
+
 	cardContent := strings.Join(parts, "\n")
 	return cardStyle.Render(cardContent)
 }
@@ -583,34 +583,34 @@ func (cs *ComponentStyler) ProgressBar(progress float64, width int, showPercenta
 	if width <= 0 {
 		width = 40
 	}
-	
+
 	// Clamp progress between 0 and 1
 	if progress < 0 {
 		progress = 0
 	} else if progress > 1 {
 		progress = 1
 	}
-	
+
 	filled := int(float64(width) * progress)
 	empty := width - filled
-	
+
 	filledBar := strings.Repeat("█", filled)
 	emptyBar := strings.Repeat("░", empty)
-	
+
 	bar := lipgloss.NewStyle().
 		Foreground(cs.theme.Colors.Primary).
 		Render(filledBar) +
 		lipgloss.NewStyle().
 			Foreground(cs.theme.Colors.BorderSubtle).
 			Render(emptyBar)
-	
+
 	if showPercentage {
 		percentage := fmt.Sprintf(" %.0f%%", progress*100)
 		bar += lipgloss.NewStyle().
 			Foreground(cs.theme.Colors.TextMuted).
 			Render(percentage)
 	}
-	
+
 	return bar
 }
 
@@ -618,7 +618,7 @@ func (cs *ComponentStyler) ProgressBar(progress float64, width int, showPercenta
 func (cs *ComponentStyler) StatusIndicator(status, text string) string {
 	var color lipgloss.Color
 	var symbol string
-	
+
 	switch strings.ToLower(status) {
 	case "success", "ok", "online", "connected":
 		color = cs.theme.Colors.Success
@@ -636,24 +636,24 @@ func (cs *ComponentStyler) StatusIndicator(status, text string) string {
 		color = cs.theme.Colors.TextMuted
 		symbol = "○"
 	}
-	
+
 	indicator := lipgloss.NewStyle().
 		Foreground(color).
 		Render(symbol)
-	
+
 	if text != "" {
 		indicator += " " + lipgloss.NewStyle().
 			Foreground(cs.theme.Colors.Text).
 			Render(text)
 	}
-	
+
 	return indicator
 }
 
 // Badge creates a styled badge
 func (cs *ComponentStyler) Badge(text string, variant ButtonStyle) string {
 	var style lipgloss.Style
-	
+
 	switch variant {
 	case ButtonPrimary:
 		style = lipgloss.NewStyle().
@@ -680,7 +680,7 @@ func (cs *ComponentStyler) Badge(text string, variant ButtonStyle) string {
 			Foreground(cs.theme.Colors.Text).
 			Background(cs.theme.Colors.BackgroundSubtle)
 	}
-	
+
 	return style.
 		Padding(0, 1).
 		Border(lipgloss.RoundedBorder()).
@@ -698,7 +698,7 @@ func (cs *ComponentStyler) Divider(width int, character string) string {
 	if character == "" {
 		character = "─"
 	}
-	
+
 	return lipgloss.NewStyle().
 		Foreground(cs.theme.Colors.Border).
 		Render(strings.Repeat(character, width))
@@ -719,7 +719,7 @@ func (cs *ComponentStyler) Spinner(size string) string {
 	default:
 		spinner = "⠋"
 	}
-	
+
 	return lipgloss.NewStyle().
 		Foreground(cs.theme.Colors.Primary).
 		Render(spinner)
@@ -739,12 +739,12 @@ func (cs *ComponentStyler) Tooltip(text, tooltip string) string {
 	mainText := lipgloss.NewStyle().
 		Foreground(cs.theme.Colors.Text).
 		Render(text)
-	
+
 	tooltipText := lipgloss.NewStyle().
 		Foreground(cs.theme.Colors.TextMuted).
 		Italic(true).
 		Render(" (" + tooltip + ")")
-	
+
 	return mainText + tooltipText
 }
 

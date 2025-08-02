@@ -76,7 +76,7 @@ func NewChatLogger() (*ChatLogger, error) {
 	}
 
 	sessionID := generateSessionID()
-	
+
 	chatLogger := &ChatLogger{
 		logDir:    logDir,
 		sessionID: sessionID,
@@ -112,12 +112,12 @@ func (cl *ChatLog) ToSession() ChatSession {
 		Messages:  cl.Messages,
 		Title:     cl.Title,
 	}
-	
+
 	// Set EndTime if session has ended
 	if !cl.LastUpdated.IsZero() && len(cl.Messages) > 0 {
 		session.EndTime = cl.LastUpdated
 	}
-	
+
 	// Extract model and provider from messages if not set
 	if session.Model == "" && len(cl.Messages) > 0 {
 		for _, msg := range cl.Messages {
@@ -128,7 +128,7 @@ func (cl *ChatLog) ToSession() ChatSession {
 			}
 		}
 	}
-	
+
 	return session
 }
 
@@ -143,7 +143,7 @@ func (cl *ChatLogger) StartSession() error {
 		LastUpdated: now,
 		TotalTokens: 0,
 	}
-	
+
 	// Save initial empty session
 	return cl.saveLog()
 }
@@ -153,7 +153,7 @@ func (cl *ChatLogger) LogMessage(message Message) error {
 	message.Timestamp = time.Now()
 	cl.currentLog.Messages = append(cl.currentLog.Messages, message)
 	cl.currentLog.LastUpdated = time.Now()
-	
+
 	// Update session metadata
 	if message.Model != "" {
 		cl.currentLog.ModelUsed = message.Model
@@ -164,7 +164,7 @@ func (cl *ChatLogger) LogMessage(message Message) error {
 	if message.Tokens != nil {
 		cl.currentLog.TotalTokens += message.Tokens.Total
 	}
-	
+
 	return cl.saveLog()
 }
 
@@ -173,7 +173,7 @@ func (cl *ChatLogger) EndSession() error {
 	if cl.currentLog == nil {
 		return nil
 	}
-	
+
 	cl.currentLog.LastUpdated = time.Now()
 	return cl.saveLog()
 }
@@ -208,12 +208,12 @@ func (cl *ChatLogger) ClearLog() error {
 	if cl.currentLog == nil {
 		return fmt.Errorf("no current log to clear")
 	}
-	
+
 	cl.currentLog.Messages = make([]Message, 0)
 	cl.currentLog.LastUpdated = time.Now()
 	cl.currentLog.TotalTokens = 0
 	cl.currentLog.TotalCost = 0
-	
+
 	return cl.saveLog()
 }
 
@@ -230,23 +230,23 @@ func (cl *ChatLogger) ListSessions(limit int) ([]*ChatLog, error) {
 	}
 
 	var sessions []*ChatLog
-	
+
 	for _, file := range files {
 		if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") {
 			filepath := filepath.Join(cl.logDir, file.Name())
-			
+
 			data, err := os.ReadFile(filepath)
 			if err != nil {
 				cl.logger.Warn("Failed to read log file", "file", file.Name(), "error", err)
 				continue
 			}
-			
+
 			var session ChatLog
 			if err := json.Unmarshal(data, &session); err != nil {
 				cl.logger.Warn("Failed to parse log file", "file", file.Name(), "error", err)
 				continue
 			}
-			
+
 			sessions = append(sessions, &session)
 		}
 	}
@@ -274,17 +274,17 @@ func (cl *ChatLogger) GetSession(sessionID string) (*ChatLog, error) {
 	for _, file := range files {
 		if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") && strings.Contains(file.Name(), sessionID) {
 			filepath := filepath.Join(cl.logDir, file.Name())
-			
+
 			data, err := os.ReadFile(filepath)
 			if err != nil {
 				return nil, fmt.Errorf("failed to read log file: %w", err)
 			}
-			
+
 			var session ChatLog
 			if err := json.Unmarshal(data, &session); err != nil {
 				return nil, fmt.Errorf("failed to parse log file: %w", err)
 			}
-			
+
 			if session.SessionID == sessionID {
 				return &session, nil
 			}
@@ -308,12 +308,12 @@ func (cl *ChatLogger) ExportSession(sessionID string, format string) (string, er
 	case "json":
 		filename = fmt.Sprintf("klip-export-%s-%s.json", timestamp, sessionID)
 		exportPath = filepath.Join(cl.logDir, filename)
-		
+
 		data, err := json.MarshalIndent(session, "", "  ")
 		if err != nil {
 			return "", fmt.Errorf("failed to marshal session: %w", err)
 		}
-		
+
 		if err := os.WriteFile(exportPath, data, 0600); err != nil {
 			return "", fmt.Errorf("failed to write export file: %w", err)
 		}
@@ -321,7 +321,7 @@ func (cl *ChatLogger) ExportSession(sessionID string, format string) (string, er
 	case "txt", "text":
 		filename = fmt.Sprintf("klip-export-%s-%s.txt", timestamp, sessionID)
 		exportPath = filepath.Join(cl.logDir, filename)
-		
+
 		textContent := cl.formatAsText(session)
 		if err := os.WriteFile(exportPath, []byte(textContent), 0600); err != nil {
 			return "", fmt.Errorf("failed to write export file: %w", err)
@@ -330,7 +330,7 @@ func (cl *ChatLogger) ExportSession(sessionID string, format string) (string, er
 	case "md", "markdown":
 		filename = fmt.Sprintf("klip-export-%s-%s.md", timestamp, sessionID)
 		exportPath = filepath.Join(cl.logDir, filename)
-		
+
 		markdownContent := cl.formatAsMarkdown(session)
 		if err := os.WriteFile(exportPath, []byte(markdownContent), 0600); err != nil {
 			return "", fmt.Errorf("failed to write export file: %w", err)
@@ -346,7 +346,7 @@ func (cl *ChatLogger) ExportSession(sessionID string, format string) (string, er
 // formatAsText formats a session as plain text
 func (cl *ChatLogger) formatAsText(session *ChatLog) string {
 	var builder strings.Builder
-	
+
 	builder.WriteString(fmt.Sprintf("Chat Log - %s\n", session.Timestamp.Format("2006-01-02 15:04:05")))
 	builder.WriteString(fmt.Sprintf("Session ID: %s\n", session.SessionID))
 	if session.ModelUsed != "" {
@@ -364,14 +364,14 @@ func (cl *ChatLogger) formatAsText(session *ChatLog) string {
 	for _, message := range session.Messages {
 		timestamp := message.Timestamp.Format("2006-01-02 15:04:05")
 		role := strings.ToUpper(message.Role)
-		
+
 		builder.WriteString(fmt.Sprintf("[%s] %s:\n", timestamp, role))
 		builder.WriteString(message.Content + "\n")
-		
+
 		if message.Tokens != nil && message.Tokens.Total > 0 {
 			builder.WriteString(fmt.Sprintf("(Tokens: %d)\n", message.Tokens.Total))
 		}
-		
+
 		builder.WriteString(strings.Repeat("-", 30) + "\n\n")
 	}
 
@@ -381,7 +381,7 @@ func (cl *ChatLogger) formatAsText(session *ChatLog) string {
 // formatAsMarkdown formats a session as Markdown
 func (cl *ChatLogger) formatAsMarkdown(session *ChatLog) string {
 	var builder strings.Builder
-	
+
 	builder.WriteString(fmt.Sprintf("# Chat Log - %s\n\n", session.Timestamp.Format("2006-01-02 15:04:05")))
 	builder.WriteString(fmt.Sprintf("**Session ID:** %s\n", session.SessionID))
 	if session.ModelUsed != "" {
@@ -399,14 +399,14 @@ func (cl *ChatLogger) formatAsMarkdown(session *ChatLog) string {
 	for _, message := range session.Messages {
 		timestamp := message.Timestamp.Format("2006-01-02 15:04:05")
 		role := strings.Title(strings.ToLower(message.Role))
-		
+
 		builder.WriteString(fmt.Sprintf("## %s - %s\n\n", role, timestamp))
 		builder.WriteString(message.Content + "\n")
-		
+
 		if message.Tokens != nil && message.Tokens.Total > 0 {
 			builder.WriteString(fmt.Sprintf("\n*Tokens: %d*\n", message.Tokens.Total))
 		}
-		
+
 		builder.WriteString("\n---\n\n")
 	}
 
@@ -423,18 +423,18 @@ func (cl *ChatLogger) DeleteSession(sessionID string) error {
 	for _, file := range files {
 		if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") && strings.Contains(file.Name(), sessionID) {
 			filepath := filepath.Join(cl.logDir, file.Name())
-			
+
 			// Verify this is the correct session
 			data, err := os.ReadFile(filepath)
 			if err != nil {
 				continue
 			}
-			
+
 			var session ChatLog
 			if err := json.Unmarshal(data, &session); err != nil {
 				continue
 			}
-			
+
 			if session.SessionID == sessionID {
 				if err := os.Remove(filepath); err != nil {
 					return fmt.Errorf("failed to delete session file: %w", err)
@@ -454,7 +454,7 @@ func (cl *ChatLogger) CleanupOldLogs(retainDays int) error {
 	}
 
 	cutoffTime := time.Now().AddDate(0, 0, -retainDays)
-	
+
 	files, err := os.ReadDir(cl.logDir)
 	if err != nil {
 		return fmt.Errorf("failed to read log directory: %w", err)
@@ -464,13 +464,13 @@ func (cl *ChatLogger) CleanupOldLogs(retainDays int) error {
 	for _, file := range files {
 		if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") {
 			filepath := filepath.Join(cl.logDir, file.Name())
-			
+
 			fileInfo, err := file.Info()
 			if err != nil {
 				cl.logger.Warn("Failed to get file info", "file", file.Name(), "error", err)
 				continue
 			}
-			
+
 			if fileInfo.ModTime().Before(cutoffTime) {
 				if err := os.Remove(filepath); err != nil {
 					cl.logger.Warn("Failed to delete old log file", "file", file.Name(), "error", err)
@@ -504,47 +504,47 @@ func (cl *ChatLogger) GetLogStats() (map[string]interface{}, error) {
 	}
 
 	var oldestTime, newestTime time.Time
-	
+
 	for _, file := range files {
 		if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") {
 			filepath := filepath.Join(cl.logDir, file.Name())
-			
+
 			fileInfo, err := file.Info()
 			if err != nil {
 				continue
 			}
-			
+
 			stats["total_size_bytes"] = stats["total_size_bytes"].(int64) + fileInfo.Size()
-			
+
 			data, err := os.ReadFile(filepath)
 			if err != nil {
 				continue
 			}
-			
+
 			var session ChatLog
 			if err := json.Unmarshal(data, &session); err != nil {
 				continue
 			}
-			
+
 			stats["total_sessions"] = stats["total_sessions"].(int) + 1
 			stats["total_messages"] = stats["total_messages"].(int) + len(session.Messages)
 			stats["total_tokens"] = stats["total_tokens"].(int) + session.TotalTokens
-			
+
 			if oldestTime.IsZero() || session.Timestamp.Before(oldestTime) {
 				oldestTime = session.Timestamp
 				stats["oldest_session"] = session.Timestamp.Format("2006-01-02 15:04:05")
 			}
-			
+
 			if newestTime.IsZero() || session.Timestamp.After(newestTime) {
 				newestTime = session.Timestamp
 				stats["newest_session"] = session.Timestamp.Format("2006-01-02 15:04:05")
 			}
-			
+
 			if session.ModelUsed != "" {
 				models := stats["models_used"].(map[string]int)
 				models[session.ModelUsed]++
 			}
-			
+
 			if session.ProviderUsed != "" {
 				providers := stats["providers_used"].(map[string]int)
 				providers[session.ProviderUsed]++

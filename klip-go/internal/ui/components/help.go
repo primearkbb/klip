@@ -42,9 +42,9 @@ type HelpItem struct {
 
 // Implement list.Item interface
 func (hi HelpItem) FilterValue() string {
-	return fmt.Sprintf("%s %s %s %s", 
-		hi.title, 
-		hi.description, 
+	return fmt.Sprintf("%s %s %s %s",
+		hi.title,
+		hi.description,
 		hi.category,
 		strings.Join(hi.keywords, " "))
 }
@@ -67,19 +67,19 @@ type InteractiveHelp struct {
 	height int
 
 	// UI components
-	list          list.Model
-	searchInput   textinput.Model
-	viewport      viewport.Model
-	
+	list        list.Model
+	searchInput textinput.Model
+	viewport    viewport.Model
+
 	// State
 	currentSection HelpSection
 	selectedItem   *HelpItem
 	items          []list.Item
 	searchMode     bool
 	tutorialStep   int
-	
+
 	// Help content
-	helpItems   []HelpItem
+	helpItems    []HelpItem
 	tutorialMode bool
 }
 
@@ -92,28 +92,28 @@ func NewInteractiveHelp(width, height int) *InteractiveHelp {
 
 	// Initialize help items
 	ih.helpItems = ih.generateHelpItems()
-	
+
 	// Convert to list items
 	for _, item := range ih.helpItems {
 		ih.items = append(ih.items, item)
 	}
-	
+
 	// Initialize list
 	d := NewHelpDelegate()
 	ih.list = list.New(ih.items, d, width/2, height-4)
 	ih.list.Title = "Help Topics"
 	ih.list.SetShowStatusBar(true)
 	ih.list.SetFilteringEnabled(true)
-	
+
 	// Initialize search input
 	ih.searchInput = textinput.New()
 	ih.searchInput.Placeholder = "Search help topics..."
 	ih.searchInput.Width = width/2 - 4
-	
+
 	// Initialize viewport
 	ih.viewport = viewport.New(width/2-2, height-4)
 	ih.viewport.SetContent("Select a help topic to view details")
-	
+
 	return ih
 }
 
@@ -430,37 +430,37 @@ func (ih *InteractiveHelp) Update(msg tea.Msg) (*InteractiveHelp, tea.Cmd) {
 func (ih *InteractiveHelp) View() string {
 	leftPanel := ih.renderLeftPanel()
 	rightPanel := ih.renderRightPanel()
-	
+
 	return lipgloss.JoinHorizontal(lipgloss.Top, leftPanel, rightPanel)
 }
 
 func (ih *InteractiveHelp) renderLeftPanel() string {
 	var content string
-	
+
 	if ih.searchMode {
-		content = fmt.Sprintf("Search: %s\n\n%s", 
-			ih.searchInput.View(), 
+		content = fmt.Sprintf("Search: %s\n\n%s",
+			ih.searchInput.View(),
 			ih.list.View())
 	} else {
 		content = ih.list.View()
 	}
-	
+
 	style := lipgloss.NewStyle().
-		Width(ih.width/2).
+		Width(ih.width / 2).
 		Height(ih.height).
 		Padding(1).
 		Border(lipgloss.RoundedBorder())
-	
+
 	return style.Render(content)
 }
 
 func (ih *InteractiveHelp) renderRightPanel() string {
 	style := lipgloss.NewStyle().
-		Width(ih.width/2).
+		Width(ih.width / 2).
 		Height(ih.height).
 		Padding(1).
 		Border(lipgloss.RoundedBorder())
-	
+
 	return style.Render(ih.viewport.View())
 }
 
@@ -476,7 +476,7 @@ func (ih *InteractiveHelp) filterItems(query string) {
 		// Filter items
 		query = strings.ToLower(query)
 		var filtered []list.Item
-		
+
 		for _, item := range ih.helpItems {
 			if ih.matchesQuery(item, query) {
 				filtered = append(filtered, item)
@@ -484,7 +484,7 @@ func (ih *InteractiveHelp) filterItems(query string) {
 		}
 		ih.items = filtered
 	}
-	
+
 	ih.list.SetItems(ih.items)
 }
 
@@ -494,33 +494,33 @@ func (ih *InteractiveHelp) matchesQuery(item HelpItem, query string) bool {
 		strings.ToLower(item.description),
 		strings.ToLower(item.category),
 		strings.ToLower(strings.Join(item.keywords, " ")))
-	
+
 	return strings.Contains(searchText, query)
 }
 
 // NewHelpDelegate creates a custom list delegate for help items
 func NewHelpDelegate() list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
-	
+
 	d.Styles.SelectedTitle = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#7C3AED")).
 		Bold(true)
-	
+
 	d.Styles.SelectedDesc = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#A78BFA"))
-	
+
 	return d
 }
 
 // Helper functions for integration with app state
 func NewInteractiveHelpFromState(state *app.HelpState, width, height int) *InteractiveHelp {
 	ih := NewInteractiveHelp(width, height)
-	
+
 	if state.CurrentSection != "" {
 		// Map string to HelpSection enum if needed
 		// This would depend on how the app state stores the section
 	}
-	
+
 	return ih
 }
 

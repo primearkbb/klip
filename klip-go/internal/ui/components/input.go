@@ -6,8 +6,8 @@ import (
 	"unicode"
 
 	"github.com/atotto/clipboard"
-	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/textarea"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/john/klip/internal/app"
@@ -38,40 +38,40 @@ type CommandSuggestion struct {
 
 // EnhancedInput provides advanced text input capabilities
 type EnhancedInput struct {
-	textInput         textinput.Model
-	textArea          textarea.Model
-	inputType         InputType
-	history           []string
-	historyIndex      int
-	suggestions       []CommandSuggestion
-	showSuggestions   bool
+	textInput          textinput.Model
+	textArea           textarea.Model
+	inputType          InputType
+	history            []string
+	historyIndex       int
+	suggestions        []CommandSuggestion
+	showSuggestions    bool
 	selectedSuggestion int
-	commandPrefix     string
-	width             int
-	height            int
-	placeholder       string
-	maxLength         int
-	showCharCount     bool
-	showTokenCount    bool
-	tokenEstimate     int
-	validator         func(string) error
-	errorMessage      string
-	focused           bool
+	commandPrefix      string
+	width              int
+	height             int
+	placeholder        string
+	maxLength          int
+	showCharCount      bool
+	showTokenCount     bool
+	tokenEstimate      int
+	validator          func(string) error
+	errorMessage       string
+	focused            bool
 }
 
 // NewEnhancedInput creates a new enhanced input component
 func NewEnhancedInput(inputType InputType, width, height int) *EnhancedInput {
 	ei := &EnhancedInput{
-		inputType:       inputType,
-		width:           width,
-		height:          height,
-		history:         make([]string, 0),
-		historyIndex:    -1,
-		suggestions:     getDefaultCommands(),
-		commandPrefix:   "/",
-		showCharCount:   true,
-		showTokenCount:  true,
-		focused:         true,
+		inputType:      inputType,
+		width:          width,
+		height:         height,
+		history:        make([]string, 0),
+		historyIndex:   -1,
+		suggestions:    getDefaultCommands(),
+		commandPrefix:  "/",
+		showCharCount:  true,
+		showTokenCount: true,
+		focused:        true,
 	}
 
 	switch inputType {
@@ -324,7 +324,7 @@ func (ei *EnhancedInput) SetPlaceholder(placeholder string) {
 // ToggleMode toggles between single-line and multi-line input
 func (ei *EnhancedInput) ToggleMode() {
 	currentValue := ei.Value()
-	
+
 	if ei.inputType == InputTypeMultiline {
 		ei.inputType = InputTypeText
 		ei.textInput = textinput.New()
@@ -341,7 +341,7 @@ func (ei *EnhancedInput) ToggleMode() {
 		ei.textArea.Focus()
 		ei.textArea.Placeholder = "Type your message (Ctrl+Enter to send)..."
 	}
-	
+
 	ei.updateTokenEstimate()
 }
 
@@ -350,7 +350,7 @@ func (ei *EnhancedInput) AddToHistory(value string) {
 	if value == "" {
 		return
 	}
-	
+
 	// Remove duplicate if exists
 	for i, item := range ei.history {
 		if item == value {
@@ -358,15 +358,15 @@ func (ei *EnhancedInput) AddToHistory(value string) {
 			break
 		}
 	}
-	
+
 	// Add to beginning
 	ei.history = append([]string{value}, ei.history...)
-	
+
 	// Limit history size
 	if len(ei.history) > 100 {
 		ei.history = ei.history[:100]
 	}
-	
+
 	ei.historyIndex = -1
 }
 
@@ -375,16 +375,16 @@ func (ei *EnhancedInput) navigateHistory(direction int) {
 	if len(ei.history) == 0 {
 		return
 	}
-	
+
 	newIndex := ei.historyIndex + direction
 	if newIndex < -1 {
 		newIndex = -1
 	} else if newIndex >= len(ei.history) {
 		newIndex = len(ei.history) - 1
 	}
-	
+
 	ei.historyIndex = newIndex
-	
+
 	if ei.historyIndex == -1 {
 		ei.SetValue("")
 	} else {
@@ -395,19 +395,19 @@ func (ei *EnhancedInput) navigateHistory(direction int) {
 // updateSuggestions updates command suggestions based on current input
 func (ei *EnhancedInput) updateSuggestions() {
 	value := ei.Value()
-	
+
 	if !strings.HasPrefix(value, ei.commandPrefix) {
 		ei.showSuggestions = false
 		return
 	}
-	
+
 	command := strings.TrimPrefix(value, ei.commandPrefix)
 	if command == "" {
 		ei.showSuggestions = true
 		ei.selectedSuggestion = 0
 		return
 	}
-	
+
 	// Filter suggestions based on input
 	filtered := make([]CommandSuggestion, 0)
 	for _, suggestion := range ei.suggestions {
@@ -415,7 +415,7 @@ func (ei *EnhancedInput) updateSuggestions() {
 			filtered = append(filtered, suggestion)
 		}
 	}
-	
+
 	if len(filtered) > 0 {
 		ei.suggestions = filtered
 		ei.showSuggestions = true
@@ -430,14 +430,14 @@ func (ei *EnhancedInput) navigateSuggestions(direction int) {
 	if len(ei.suggestions) == 0 {
 		return
 	}
-	
+
 	newIndex := ei.selectedSuggestion + direction
 	if newIndex < 0 {
 		newIndex = len(ei.suggestions) - 1
 	} else if newIndex >= len(ei.suggestions) {
 		newIndex = 0
 	}
-	
+
 	ei.selectedSuggestion = newIndex
 }
 
@@ -446,7 +446,7 @@ func (ei *EnhancedInput) acceptSuggestion() {
 	if !ei.showSuggestions || len(ei.suggestions) == 0 {
 		return
 	}
-	
+
 	suggestion := ei.suggestions[ei.selectedSuggestion]
 	ei.SetValue(ei.commandPrefix + suggestion.Command + " ")
 	ei.showSuggestions = false
@@ -464,7 +464,7 @@ func (ei *EnhancedInput) validateInput() {
 		ei.errorMessage = ""
 		return
 	}
-	
+
 	if err := ei.validator(ei.Value()); err != nil {
 		ei.errorMessage = err.Error()
 	} else {
@@ -479,11 +479,11 @@ func (ei *EnhancedInput) pasteFromClipboard() tea.Cmd {
 		if err != nil {
 			return InputMsg{Type: "error", Data: err}
 		}
-		
+
 		currentValue := ei.Value()
 		// Insert at cursor position (simplified for now)
 		newValue := currentValue + text
-		
+
 		return InputMsg{Type: "set_value", Data: newValue}
 	}
 }
@@ -494,12 +494,12 @@ func (ei *EnhancedInput) cutToClipboard() tea.Cmd {
 		if value == "" {
 			return nil
 		}
-		
+
 		err := clipboard.WriteAll(value)
 		if err != nil {
 			return InputMsg{Type: "error", Data: err}
 		}
-		
+
 		return InputMsg{Type: "clear"}
 	}
 }
@@ -523,15 +523,15 @@ func (ei *EnhancedInput) renderSuggestions() string {
 	if len(ei.suggestions) == 0 {
 		return ""
 	}
-	
+
 	var content strings.Builder
 	content.WriteString(SuggestionsHeaderStyle.Render("Commands:"))
 	content.WriteString("\n")
-	
+
 	maxVisible := 5
 	start := 0
 	end := len(ei.suggestions)
-	
+
 	if end > maxVisible {
 		// Center the selection
 		start = ei.selectedSuggestion - maxVisible/2
@@ -544,39 +544,39 @@ func (ei *EnhancedInput) renderSuggestions() string {
 			start = end - maxVisible
 		}
 	}
-	
+
 	for i := start; i < end; i++ {
 		suggestion := ei.suggestions[i]
 		prefix := "  "
 		style := SuggestionStyle
-		
+
 		if i == ei.selectedSuggestion {
 			prefix = "→ "
 			style = SelectedSuggestionStyle
 		}
-		
+
 		line := fmt.Sprintf("%s%s%s - %s",
 			prefix,
 			ei.commandPrefix,
 			suggestion.Command,
 			suggestion.Description)
-		
+
 		content.WriteString(style.Render(line))
 		content.WriteString("\n")
 	}
-	
+
 	return SuggestionsContainerStyle.Render(content.String())
 }
 
 // renderFooter renders the input footer with stats and errors
 func (ei *EnhancedInput) renderFooter() string {
 	var parts []string
-	
+
 	// Error message
 	if ei.errorMessage != "" {
 		parts = append(parts, ErrorMessageStyle.Render("✗ "+ei.errorMessage))
 	}
-	
+
 	// Character count
 	if ei.showCharCount {
 		charCount := len(ei.Value())
@@ -592,13 +592,13 @@ func (ei *EnhancedInput) renderFooter() string {
 			parts = append(parts, CharCountStyle.Render(charText))
 		}
 	}
-	
+
 	// Token estimate
 	if ei.showTokenCount {
 		tokenText := fmt.Sprintf("~%d tokens", ei.tokenEstimate)
 		parts = append(parts, TokenCountStyle.Render(tokenText))
 	}
-	
+
 	// Input mode indicator
 	var modeText string
 	switch ei.inputType {
@@ -612,11 +612,11 @@ func (ei *EnhancedInput) renderFooter() string {
 		modeText = "TEXT"
 	}
 	parts = append(parts, ModeIndicatorStyle.Render(modeText))
-	
+
 	if len(parts) == 0 {
 		return ""
 	}
-	
+
 	return FooterStyle.Render(strings.Join(parts, " │ "))
 }
 
@@ -646,12 +646,12 @@ func estimateTokens(text string) int {
 	if text == "" {
 		return 0
 	}
-	
+
 	// Rough estimation: 1 token ≈ 4 characters for English text
 	// This is a simplified estimation
 	words := strings.Fields(text)
 	wordCount := len(words)
-	
+
 	// Count punctuation and special characters
 	specialChars := 0
 	for _, r := range text {
@@ -659,13 +659,13 @@ func estimateTokens(text string) int {
 			specialChars++
 		}
 	}
-	
+
 	// Rough token estimation
 	tokens := wordCount + (specialChars / 2)
 	if tokens < len(text)/4 {
 		tokens = len(text) / 4
 	}
-	
+
 	return tokens
 }
 
@@ -673,70 +673,70 @@ func estimateTokens(text string) int {
 var (
 	// Input field styles
 	InputStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#7C3AED")).
-		Padding(0, 1)
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#7C3AED")).
+			Padding(0, 1)
 
 	FocusedInputStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#7C3AED")).
-		Padding(0, 1).
-		BorderStyle(lipgloss.ThickBorder())
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#7C3AED")).
+				Padding(0, 1).
+				BorderStyle(lipgloss.ThickBorder())
 
 	ErrorInputStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#EF4444")).
-		Padding(0, 1)
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#EF4444")).
+			Padding(0, 1)
 
 	MultilineInputStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#7C3AED")).
-		Padding(1)
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#7C3AED")).
+				Padding(1)
 
 	// Suggestions styles
 	SuggestionsContainerStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#D1D5DB")).
-		Padding(1).
-		MarginTop(1)
+					Border(lipgloss.RoundedBorder()).
+					BorderForeground(lipgloss.Color("#D1D5DB")).
+					Padding(1).
+					MarginTop(1)
 
 	SuggestionsHeaderStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		Bold(true)
+				Foreground(lipgloss.Color("#6B7280")).
+				Bold(true)
 
 	SuggestionStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#374151")).
-		PaddingLeft(1)
+			Foreground(lipgloss.Color("#374151")).
+			PaddingLeft(1)
 
 	SelectedSuggestionStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Background(lipgloss.Color("#F3F4F6")).
-		Bold(true).
-		PaddingLeft(1)
+				Foreground(lipgloss.Color("#7C3AED")).
+				Background(lipgloss.Color("#F3F4F6")).
+				Bold(true).
+				PaddingLeft(1)
 
 	// Footer styles
 	FooterStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		MarginTop(1).
-		PaddingLeft(1)
+			Foreground(lipgloss.Color("#6B7280")).
+			MarginTop(1).
+			PaddingLeft(1)
 
 	ErrorMessageStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#EF4444")).
-		Bold(true)
+				Foreground(lipgloss.Color("#EF4444")).
+				Bold(true)
 
 	CharCountStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280"))
+			Foreground(lipgloss.Color("#6B7280"))
 
 	ErrorCharCountStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#EF4444")).
-		Bold(true)
+				Foreground(lipgloss.Color("#EF4444")).
+				Bold(true)
 
 	TokenCountStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED"))
+			Foreground(lipgloss.Color("#7C3AED"))
 
 	ModeIndicatorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#059669")).
-		Bold(true)
+				Foreground(lipgloss.Color("#059669")).
+				Bold(true)
 )
 
 // Helper functions for integration with app state
@@ -752,10 +752,10 @@ func NewEnhancedInputFromState(state *app.ChatState, width, height int) *Enhance
 	default:
 		inputType = InputTypeText
 	}
-	
+
 	ei := NewEnhancedInput(inputType, width, height)
 	ei.SetValue(state.CurrentInput)
-	
+
 	return ei
 }
 
@@ -773,7 +773,7 @@ func (ei *EnhancedInput) UpdateFromState(state *app.ChatState) {
 	default:
 		targetType = InputTypeText
 	}
-	
+
 	if ei.inputType != targetType {
 		ei.inputType = targetType
 		// Re-initialize with new type (simplified)
@@ -781,7 +781,7 @@ func (ei *EnhancedInput) UpdateFromState(state *app.ChatState) {
 		*ei = *NewEnhancedInput(targetType, ei.width, ei.height)
 		ei.SetValue(currentValue)
 	}
-	
+
 	// Update value if different
 	if ei.Value() != state.CurrentInput {
 		ei.SetValue(state.CurrentInput)

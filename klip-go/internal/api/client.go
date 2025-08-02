@@ -447,17 +447,17 @@ func (c *Client) buildRequestMetrics(req *ChatRequest, startTime time.Time) stor
 	}
 
 	return storage.RequestMetrics{
-		StartTime:                 startTime,
-		ModelID:                   req.Model.ID,
-		ModelName:                 req.Model.Name,
-		Provider:                  req.Model.Provider.String(),
-		MessageCount:              len(req.Messages),
-		UserMessageLength:         len(lastUserMessage),
-		TotalConversationLength:   totalLength,
-		HasSystemMessage:          systemMessage != "",
-		Temperature:               req.Temperature,
-		MaxTokens:                 req.MaxTokens,
-		IsStream:                  req.Stream,
+		StartTime:               startTime,
+		ModelID:                 req.Model.ID,
+		ModelName:               req.Model.Name,
+		Provider:                req.Model.Provider.String(),
+		MessageCount:            len(req.Messages),
+		UserMessageLength:       len(lastUserMessage),
+		TotalConversationLength: totalLength,
+		HasSystemMessage:        systemMessage != "",
+		Temperature:             req.Temperature,
+		MaxTokens:               req.MaxTokens,
+		IsStream:                req.Stream,
 	}
 }
 

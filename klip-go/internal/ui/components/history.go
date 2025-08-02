@@ -52,10 +52,10 @@ type SessionMetadata struct {
 
 // Implement list.Item interface
 func (si SessionItem) FilterValue() string {
-	return fmt.Sprintf("%s %s %s %s", 
-		si.session.ID, 
-		si.session.Title, 
-		si.session.CreatedAt.Format("2006-01-02"), 
+	return fmt.Sprintf("%s %s %s %s",
+		si.session.ID,
+		si.session.Title,
+		si.session.CreatedAt.Format("2006-01-02"),
 		si.metadata.LastMessage)
 }
 
@@ -64,11 +64,11 @@ func (si SessionItem) Title() string {
 	if title == "" {
 		title = fmt.Sprintf("Session %s", si.session.ID[:8])
 	}
-	
+
 	if si.highlighted {
 		title = "🔍 " + title
 	}
-	
+
 	return title
 }
 
@@ -78,7 +78,7 @@ func (si SessionItem) Description() string {
 		si.metadata.MessageCount,
 		humanize.Comma(int64(si.metadata.TokenCount)),
 		strings.Join(si.metadata.Models, ", "))
-	
+
 	if si.metadata.LastMessage != "" {
 		lastMsg := si.metadata.LastMessage
 		if len(lastMsg) > 50 {
@@ -86,48 +86,48 @@ func (si SessionItem) Description() string {
 		}
 		desc += fmt.Sprintf(" • \"%s\"", lastMsg)
 	}
-	
+
 	return desc
 }
 
 // HistoryBrowser provides comprehensive chat history browsing capabilities
 type HistoryBrowser struct {
-	list            list.Model
-	table           table.Model
-	preview         viewport.Model
-	searchInput     textinput.Model
-	sessions        []storage.ChatSession
+	list             list.Model
+	table            table.Model
+	preview          viewport.Model
+	searchInput      textinput.Model
+	sessions         []storage.ChatSession
 	filteredSessions []SessionItem
-	selectedSession *storage.ChatSession
-	viewMode        HistoryViewMode
-	searchActive    bool
-	searchQuery     string
-	exportFormats   []string
-	selectedFormat  int
-	width           int
-	height          int
-	loading         bool
-	errorMessage    string
-	analytics       *HistoryAnalytics
-	sortBy          string
-	sortDesc        bool
+	selectedSession  *storage.ChatSession
+	viewMode         HistoryViewMode
+	searchActive     bool
+	searchQuery      string
+	exportFormats    []string
+	selectedFormat   int
+	width            int
+	height           int
+	loading          bool
+	errorMessage     string
+	analytics        *HistoryAnalytics
+	sortBy           string
+	sortDesc         bool
 }
 
 // HistoryAnalytics contains analytics about chat history
 type HistoryAnalytics struct {
-	TotalSessions   int
-	TotalMessages   int
-	TotalTokens     int
+	TotalSessions    int
+	TotalMessages    int
+	TotalTokens      int
 	AvgSessionLength time.Duration
-	TopModels       []ModelUsage
-	DailyActivity   []DayActivity
-	SearchResults   int
+	TopModels        []ModelUsage
+	DailyActivity    []DayActivity
+	SearchResults    int
 }
 
 // ModelUsage represents usage statistics for a model
 type ModelUsage struct {
-	Model string
-	Count int
+	Model  string
+	Count  int
 	Tokens int
 }
 
@@ -159,7 +159,7 @@ func NewHistoryBrowser(width, height int) *HistoryBrowser {
 		{Title: "Model", Width: 15},
 		{Title: "Duration", Width: 10},
 	}
-	
+
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows([]table.Row{}),
@@ -321,7 +321,7 @@ func (hb *HistoryBrowser) Update(msg tea.Msg) (*HistoryBrowser, tea.Cmd) {
 		if hb.searchActive {
 			hb.searchInput, cmd = hb.searchInput.Update(msg)
 			cmds = append(cmds, cmd)
-			
+
 			// Live search
 			query := hb.searchInput.Value()
 			if query != hb.searchQuery {
@@ -437,10 +437,10 @@ func (hb *HistoryBrowser) SetSessions(sessions []storage.ChatSession) {
 // filterSessions filters sessions based on search query
 func (hb *HistoryBrowser) filterSessions() {
 	filtered := make([]SessionItem, 0)
-	
+
 	for _, session := range hb.sessions {
 		item := hb.createSessionItem(session)
-		
+
 		if hb.searchQuery == "" || hb.matchesSearch(session, hb.searchQuery) {
 			if hb.searchQuery != "" {
 				item.highlighted = true
@@ -448,17 +448,17 @@ func (hb *HistoryBrowser) filterSessions() {
 			filtered = append(filtered, item)
 		}
 	}
-	
+
 	hb.filteredSessions = filtered
 	hb.analytics.SearchResults = len(filtered)
-	
+
 	// Update list items
 	listItems := make([]list.Item, len(filtered))
 	for i, item := range filtered {
 		listItems[i] = item
 	}
 	hb.list.SetItems(listItems)
-	
+
 	// Update table rows
 	hb.updateTable()
 }
@@ -466,24 +466,24 @@ func (hb *HistoryBrowser) filterSessions() {
 // matchesSearch checks if a session matches the search query
 func (hb *HistoryBrowser) matchesSearch(session storage.ChatSession, query string) bool {
 	query = strings.ToLower(query)
-	
+
 	// Search in title
 	if strings.Contains(strings.ToLower(session.Title), query) {
 		return true
 	}
-	
+
 	// Search in session ID
 	if strings.Contains(strings.ToLower(session.ID), query) {
 		return true
 	}
-	
+
 	// Search in messages
 	for _, msg := range session.Messages {
 		if strings.Contains(strings.ToLower(msg.Content), query) {
 			return true
 		}
 	}
-	
+
 	// Search in model names
 	models := hb.extractModels(session)
 	for _, model := range models {
@@ -491,7 +491,7 @@ func (hb *HistoryBrowser) matchesSearch(session storage.ChatSession, query strin
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -499,7 +499,7 @@ func (hb *HistoryBrowser) matchesSearch(session storage.ChatSession, query strin
 func (hb *HistoryBrowser) sortSessions() {
 	sort.Slice(hb.sessions, func(i, j int) bool {
 		var result bool
-		
+
 		switch hb.sortBy {
 		case "date":
 			result = hb.sessions[i].CreatedAt.After(hb.sessions[j].CreatedAt)
@@ -514,7 +514,7 @@ func (hb *HistoryBrowser) sortSessions() {
 		default:
 			result = hb.sessions[i].CreatedAt.After(hb.sessions[j].CreatedAt)
 		}
-		
+
 		if hb.sortDesc {
 			return result
 		}
@@ -544,13 +544,13 @@ func (hb *HistoryBrowser) createSessionItem(session storage.ChatSession) Session
 		TokenCount:   hb.calculateTokens(session),
 		Models:       hb.extractModels(session),
 	}
-	
+
 	if len(session.Messages) > 0 {
 		lastMsg := session.Messages[len(session.Messages)-1]
 		metadata.LastMessage = lastMsg.Content
 		metadata.Duration = session.UpdatedAt.Sub(session.CreatedAt)
 	}
-	
+
 	return SessionItem{
 		session:  session,
 		metadata: metadata,
@@ -575,12 +575,12 @@ func (hb *HistoryBrowser) extractModels(session storage.ChatSession) []string {
 			modelSet[msg.Model] = true
 		}
 	}
-	
+
 	models := make([]string, 0, len(modelSet))
 	for model := range modelSet {
 		models = append(models, model)
 	}
-	
+
 	sort.Strings(models)
 	return models
 }
@@ -592,19 +592,19 @@ func (hb *HistoryBrowser) calculateAnalytics() {
 		TopModels:     make([]ModelUsage, 0),
 		DailyActivity: make([]DayActivity, 0),
 	}
-	
+
 	modelUsage := make(map[string]*ModelUsage)
 	dailyActivity := make(map[string]*DayActivity)
-	
+
 	totalDuration := time.Duration(0)
-	
+
 	for _, session := range hb.sessions {
 		analytics.TotalMessages += len(session.Messages)
 		analytics.TotalTokens += hb.calculateTokens(session)
-		
+
 		duration := session.UpdatedAt.Sub(session.CreatedAt)
 		totalDuration += duration
-		
+
 		// Track model usage
 		models := hb.extractModels(session)
 		for _, model := range models {
@@ -619,7 +619,7 @@ func (hb *HistoryBrowser) calculateAnalytics() {
 				}
 			}
 		}
-		
+
 		// Track daily activity
 		dateKey := session.CreatedAt.Format("2006-01-02")
 		if activity, exists := dailyActivity[dateKey]; exists {
@@ -633,11 +633,11 @@ func (hb *HistoryBrowser) calculateAnalytics() {
 			}
 		}
 	}
-	
+
 	if analytics.TotalSessions > 0 {
 		analytics.AvgSessionLength = totalDuration / time.Duration(analytics.TotalSessions)
 	}
-	
+
 	// Convert maps to slices and sort
 	for _, usage := range modelUsage {
 		analytics.TopModels = append(analytics.TopModels, *usage)
@@ -645,35 +645,35 @@ func (hb *HistoryBrowser) calculateAnalytics() {
 	sort.Slice(analytics.TopModels, func(i, j int) bool {
 		return analytics.TopModels[i].Count > analytics.TopModels[j].Count
 	})
-	
+
 	for _, activity := range dailyActivity {
 		analytics.DailyActivity = append(analytics.DailyActivity, *activity)
 	}
 	sort.Slice(analytics.DailyActivity, func(i, j int) bool {
 		return analytics.DailyActivity[i].Date.After(analytics.DailyActivity[j].Date)
 	})
-	
+
 	hb.analytics = analytics
 }
 
 // updateTable updates the table view with current sessions
 func (hb *HistoryBrowser) updateTable() {
 	rows := make([]table.Row, 0, len(hb.filteredSessions))
-	
+
 	for _, item := range hb.filteredSessions {
 		session := item.session
 		title := session.Title
 		if title == "" {
 			title = fmt.Sprintf("Session %s", session.ID[:8])
 		}
-		
+
 		models := strings.Join(item.metadata.Models, ", ")
 		if len(models) > 13 {
 			models = models[:10] + "..."
 		}
-		
+
 		duration := item.metadata.Duration.Round(time.Minute).String()
-		
+
 		row := table.Row{
 			title,
 			session.CreatedAt.Format("2006-01-02"),
@@ -684,7 +684,7 @@ func (hb *HistoryBrowser) updateTable() {
 		}
 		rows = append(rows, row)
 	}
-	
+
 	hb.table.SetRows(rows)
 }
 
@@ -694,10 +694,10 @@ func (hb *HistoryBrowser) updatePreview() {
 		hb.preview.SetContent("No session selected")
 		return
 	}
-	
+
 	var content strings.Builder
 	session := *hb.selectedSession
-	
+
 	// Session header
 	content.WriteString(HistoryPreviewTitleStyle.Render(session.Title))
 	content.WriteString("\n")
@@ -706,14 +706,14 @@ func (hb *HistoryBrowser) updatePreview() {
 		session.UpdatedAt.Format("2006-01-02 15:04:05"),
 		len(session.Messages))))
 	content.WriteString("\n\n")
-	
+
 	// Messages
 	for i, msg := range session.Messages {
 		// Message header
 		role := strings.Title(msg.Role)
 		timestamp := msg.Timestamp.Format("15:04:05")
 		header := fmt.Sprintf("%s (%s)", role, timestamp)
-		
+
 		var headerStyle lipgloss.Style
 		switch msg.Role {
 		case "user":
@@ -723,51 +723,51 @@ func (hb *HistoryBrowser) updatePreview() {
 		default:
 			headerStyle = HistoryPreviewSystemHeaderStyle
 		}
-		
+
 		content.WriteString(headerStyle.Render(header))
 		content.WriteString("\n")
-		
+
 		// Message content
 		msgContent := msg.Content
 		if len(msgContent) > 1000 {
 			msgContent = msgContent[:997] + "..."
 		}
-		
+
 		content.WriteString(HistoryPreviewContentStyle.Render(msgContent))
-		
+
 		if i < len(session.Messages)-1 {
 			content.WriteString("\n\n")
 		}
 	}
-	
+
 	hb.preview.SetContent(content.String())
 }
 
 // renderHeader renders the header with view mode tabs and analytics
 func (hb *HistoryBrowser) renderHeader() string {
 	var content strings.Builder
-	
+
 	// Title and analytics
 	title := "Chat History"
 	if hb.analytics.TotalSessions > 0 {
-		title += fmt.Sprintf(" (%d sessions, %d messages)", 
-			hb.analytics.TotalSessions, 
+		title += fmt.Sprintf(" (%d sessions, %d messages)",
+			hb.analytics.TotalSessions,
 			hb.analytics.TotalMessages)
 	}
-	
+
 	if hb.searchQuery != "" {
-		title += fmt.Sprintf(" - Search: \"%s\" (%d results)", 
-			hb.searchQuery, 
+		title += fmt.Sprintf(" - Search: \"%s\" (%d results)",
+			hb.searchQuery,
 			hb.analytics.SearchResults)
 	}
-	
+
 	content.WriteString(HistoryTitleStyle.Render(title))
 	content.WriteString("\n")
-	
+
 	// View mode tabs
 	tabs := []string{"List", "Table", "Preview", "Export"}
 	var tabRendered []string
-	
+
 	for i, tab := range tabs {
 		if HistoryViewMode(i) == hb.viewMode {
 			tabRendered = append(tabRendered, HistoryActiveTabStyle.Render(fmt.Sprintf("%d:%s", i+1, tab)))
@@ -775,9 +775,9 @@ func (hb *HistoryBrowser) renderHeader() string {
 			tabRendered = append(tabRendered, HistoryInactiveTabStyle.Render(fmt.Sprintf("%d:%s", i+1, tab)))
 		}
 	}
-	
+
 	content.WriteString(HistoryTabContainerStyle.Render(strings.Join(tabRendered, "")))
-	
+
 	return content.String()
 }
 
@@ -786,46 +786,46 @@ func (hb *HistoryBrowser) renderPreview() string {
 	if hb.selectedSession == nil {
 		return HistoryPreviewStyle.Render("No session selected. Press Esc to return to list.")
 	}
-	
+
 	return HistoryPreviewContainerStyle.Render(hb.preview.View())
 }
 
 // renderExportView renders the export selection view
 func (hb *HistoryBrowser) renderExportView() string {
 	var content strings.Builder
-	
+
 	content.WriteString(HistoryExportTitleStyle.Render("Export Options"))
 	content.WriteString("\n\n")
-	
+
 	if hb.selectedSession != nil {
 		content.WriteString(fmt.Sprintf("Selected Session: %s\n", hb.selectedSession.Title))
 		content.WriteString("\n")
 	}
-	
+
 	content.WriteString("Choose format:\n")
 	for i, format := range hb.exportFormats {
 		prefix := "  "
 		style := HistoryExportOptionStyle
-		
+
 		if i == hb.selectedFormat {
 			prefix = "→ "
 			style = HistoryExportSelectedStyle
 		}
-		
+
 		content.WriteString(style.Render(fmt.Sprintf("%s%s", prefix, format)))
 		content.WriteString("\n")
 	}
-	
+
 	content.WriteString("\n")
 	content.WriteString("Ctrl+A: Export all sessions")
-	
+
 	return HistoryExportContainerStyle.Render(content.String())
 }
 
 // renderFooter renders the footer with keyboard shortcuts
 func (hb *HistoryBrowser) renderFooter() string {
 	var shortcuts []string
-	
+
 	if hb.searchActive {
 		shortcuts = []string{"enter: search", "esc: cancel"}
 	} else {
@@ -848,7 +848,7 @@ func (hb *HistoryBrowser) renderFooter() string {
 			}
 		}
 	}
-	
+
 	return HistoryFooterStyle.Render(strings.Join(shortcuts, " • "))
 }
 
@@ -883,15 +883,15 @@ func (hb *HistoryBrowser) refresh() tea.Cmd {
 // NewHistoryDelegate creates a delegate for history list items
 func NewHistoryDelegate() list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
-	
+
 	d.Styles.SelectedTitle = HistorySelectedItemStyle
 	d.Styles.SelectedDesc = HistorySelectedItemDescStyle
 	d.Styles.NormalTitle = HistoryItemStyle
 	d.Styles.NormalDesc = HistoryItemDescStyle
-	
+
 	d.SetHeight(2)
 	d.SetSpacing(1)
-	
+
 	return d
 }
 
@@ -914,120 +914,120 @@ func HistoryTableStyles() table.Styles {
 var (
 	// Container styles
 	HistoryContainerStyle = lipgloss.NewStyle().
-		Padding(1)
+				Padding(1)
 
 	HistoryTitleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true)
+				Foreground(lipgloss.Color("#7C3AED")).
+				Bold(true)
 
 	// Tab styles
 	HistoryTabContainerStyle = lipgloss.NewStyle().
-		BorderBottom(true).
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("#E5E7EB")).
-		MarginBottom(1)
+					BorderBottom(true).
+					BorderStyle(lipgloss.NormalBorder()).
+					BorderForeground(lipgloss.Color("#E5E7EB")).
+					MarginBottom(1)
 
 	HistoryActiveTabStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Background(lipgloss.Color("#F3F4F6")).
-		Bold(true).
-		Padding(0, 2).
-		MarginRight(1)
+				Foreground(lipgloss.Color("#7C3AED")).
+				Background(lipgloss.Color("#F3F4F6")).
+				Bold(true).
+				Padding(0, 2).
+				MarginRight(1)
 
 	HistoryInactiveTabStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		Padding(0, 2).
-		MarginRight(1)
+				Foreground(lipgloss.Color("#6B7280")).
+				Padding(0, 2).
+				MarginRight(1)
 
 	// List styles
 	HistoryListTitleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true)
+				Foreground(lipgloss.Color("#7C3AED")).
+				Bold(true)
 
 	HistoryListPaginationStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280"))
+					Foreground(lipgloss.Color("#6B7280"))
 
 	HistoryItemStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#1F2937"))
+				Foreground(lipgloss.Color("#1F2937"))
 
 	HistoryItemDescStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280"))
+				Foreground(lipgloss.Color("#6B7280"))
 
 	HistorySelectedItemStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true).
-		Background(lipgloss.Color("#F3F4F6"))
+					Foreground(lipgloss.Color("#7C3AED")).
+					Bold(true).
+					Background(lipgloss.Color("#F3F4F6"))
 
 	HistorySelectedItemDescStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Background(lipgloss.Color("#F3F4F6"))
+					Foreground(lipgloss.Color("#7C3AED")).
+					Background(lipgloss.Color("#F3F4F6"))
 
 	// Search styles
 	HistorySearchStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#7C3AED")).
-		Padding(0, 1).
-		MarginBottom(1)
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#7C3AED")).
+				Padding(0, 1).
+				MarginBottom(1)
 
 	// Preview styles
 	HistoryPreviewContainerStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#D1D5DB")).
-		Padding(1)
+					Border(lipgloss.RoundedBorder()).
+					BorderForeground(lipgloss.Color("#D1D5DB")).
+					Padding(1)
 
 	HistoryPreviewStyle = lipgloss.NewStyle().
-		PaddingLeft(1).
-		PaddingRight(1)
+				PaddingLeft(1).
+				PaddingRight(1)
 
 	HistoryPreviewTitleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true)
+					Foreground(lipgloss.Color("#7C3AED")).
+					Bold(true)
 
 	HistoryPreviewMetaStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		Italic(true)
+				Foreground(lipgloss.Color("#6B7280")).
+				Italic(true)
 
 	HistoryPreviewUserHeaderStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#3B82F6")).
-		Bold(true)
+					Foreground(lipgloss.Color("#3B82F6")).
+					Bold(true)
 
 	HistoryPreviewAssistantHeaderStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true)
+						Foreground(lipgloss.Color("#7C3AED")).
+						Bold(true)
 
 	HistoryPreviewSystemHeaderStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		Bold(true)
+					Foreground(lipgloss.Color("#6B7280")).
+					Bold(true)
 
 	HistoryPreviewContentStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#1F2937")).
-		PaddingLeft(2)
+					Foreground(lipgloss.Color("#1F2937")).
+					PaddingLeft(2)
 
 	// Export styles
 	HistoryExportContainerStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#D1D5DB")).
-		Padding(2)
+					Border(lipgloss.RoundedBorder()).
+					BorderForeground(lipgloss.Color("#D1D5DB")).
+					Padding(2)
 
 	HistoryExportTitleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true)
+				Foreground(lipgloss.Color("#7C3AED")).
+				Bold(true)
 
 	HistoryExportOptionStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#374151"))
+					Foreground(lipgloss.Color("#374151"))
 
 	HistoryExportSelectedStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true).
-		Background(lipgloss.Color("#F3F4F6"))
+					Foreground(lipgloss.Color("#7C3AED")).
+					Bold(true).
+					Background(lipgloss.Color("#F3F4F6"))
 
 	// Footer styles
 	HistoryFooterStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		BorderTop(true).
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("#E5E7EB")).
-		PaddingTop(1)
+				Foreground(lipgloss.Color("#6B7280")).
+				BorderTop(true).
+				BorderStyle(lipgloss.NormalBorder()).
+				BorderForeground(lipgloss.Color("#E5E7EB")).
+				PaddingTop(1)
 )
 
 // Helper functions for integration with app state
@@ -1035,11 +1035,11 @@ func NewHistoryBrowserFromState(state *app.HistoryState, width, height int) *His
 	hb := NewHistoryBrowser(width, height)
 	hb.SetSessions(state.Sessions)
 	hb.loading = state.Loading
-	
+
 	if state.Error != nil {
 		hb.errorMessage = state.Error.Error()
 	}
-	
+
 	return hb
 }
 
@@ -1047,7 +1047,7 @@ func NewHistoryBrowserFromState(state *app.HistoryState, width, height int) *His
 func (hb *HistoryBrowser) UpdateFromState(state *app.HistoryState) {
 	hb.SetSessions(state.Sessions)
 	hb.loading = state.Loading
-	
+
 	if state.Error != nil {
 		hb.errorMessage = state.Error.Error()
 	} else {

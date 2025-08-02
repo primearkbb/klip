@@ -37,24 +37,24 @@ func NewOpenAIProvider(apiKey string, httpClient *http.Client) (api.ProviderInte
 
 // OpenAIRequest represents the request format for OpenAI API
 type OpenAIRequest struct {
-	Model       string          `json:"model"`
-	Messages    []OpenAIMessage `json:"messages"`
-	MaxTokens   int             `json:"max_tokens,omitempty"`
-	Temperature float64         `json:"temperature,omitempty"`
-	Stream      bool            `json:"stream,omitempty"`
-	Functions   []OpenAIFunction `json:"functions,omitempty"`
-	FunctionCall interface{}    `json:"function_call,omitempty"`
-	Tools       []OpenAITool    `json:"tools,omitempty"`
-	ToolChoice  interface{}     `json:"tool_choice,omitempty"`
+	Model        string           `json:"model"`
+	Messages     []OpenAIMessage  `json:"messages"`
+	MaxTokens    int              `json:"max_tokens,omitempty"`
+	Temperature  float64          `json:"temperature,omitempty"`
+	Stream       bool             `json:"stream,omitempty"`
+	Functions    []OpenAIFunction `json:"functions,omitempty"`
+	FunctionCall interface{}      `json:"function_call,omitempty"`
+	Tools        []OpenAITool     `json:"tools,omitempty"`
+	ToolChoice   interface{}      `json:"tool_choice,omitempty"`
 }
 
 // OpenAIMessage represents a message in OpenAI format
 type OpenAIMessage struct {
-	Role         string                 `json:"role"`
-	Content      string                 `json:"content,omitempty"`
-	Name         string                 `json:"name,omitempty"`
-	FunctionCall *OpenAIFunctionCall    `json:"function_call,omitempty"`
-	ToolCalls    []OpenAIToolCall       `json:"tool_calls,omitempty"`
+	Role         string              `json:"role"`
+	Content      string              `json:"content,omitempty"`
+	Name         string              `json:"name,omitempty"`
+	FunctionCall *OpenAIFunctionCall `json:"function_call,omitempty"`
+	ToolCalls    []OpenAIToolCall    `json:"tool_calls,omitempty"`
 }
 
 // OpenAIFunction represents a function definition for function calling
@@ -123,18 +123,18 @@ type OpenAIStreamEvent struct {
 // Chat sends a non-streaming chat request to OpenAI
 func (p *OpenAIProvider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error) {
 	openaiReq := p.buildOpenAIRequest(req, false)
-	
+
 	requestBody, err := json.Marshal(openaiReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
 	resp, err := api.MakeHTTPRequest(
-		ctx, 
-		p.httpClient, 
-		"POST", 
-		p.baseURL+"/chat/completions", 
-		p.headers, 
+		ctx,
+		p.httpClient,
+		"POST",
+		p.baseURL+"/chat/completions",
+		p.headers,
 		requestBody,
 	)
 	if err != nil {
@@ -164,7 +164,7 @@ func (p *OpenAIProvider) ChatStream(ctx context.Context, req *api.ChatRequest) (
 		defer close(errorChan)
 
 		openaiReq := p.buildOpenAIRequest(req, true)
-		
+
 		requestBody, err := json.Marshal(openaiReq)
 		if err != nil {
 			errorChan <- fmt.Errorf("failed to marshal request: %w", err)
@@ -172,11 +172,11 @@ func (p *OpenAIProvider) ChatStream(ctx context.Context, req *api.ChatRequest) (
 		}
 
 		resp, err := api.MakeHTTPRequest(
-			ctx, 
-			p.httpClient, 
-			"POST", 
-			p.baseURL+"/chat/completions", 
-			p.headers, 
+			ctx,
+			p.httpClient,
+			"POST",
+			p.baseURL+"/chat/completions",
+			p.headers,
 			requestBody,
 		)
 		if err != nil {

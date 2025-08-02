@@ -49,15 +49,15 @@ func (mi ModelItem) Description() string {
 		mi.model.Provider.String(),
 		humanize.Comma(int64(mi.model.MaxTokens)),
 		mi.model.ContextWindow/1000)
-	
+
 	if mi.favorite {
 		desc = "★ " + desc
 	}
-	
+
 	if mi.usageInfo != nil && !mi.usageInfo.LastUsed.IsZero() {
 		desc += fmt.Sprintf(" • Used %s", humanize.Time(mi.usageInfo.LastUsed))
 	}
-	
+
 	return desc
 }
 
@@ -224,7 +224,7 @@ func (ms *ModelSelector) Update(msg tea.Msg) (*ModelSelector, tea.Cmd) {
 		if ms.searchActive {
 			ms.searchInput, cmd = ms.searchInput.Update(msg)
 			cmds = append(cmds, cmd)
-			
+
 			// Live search
 			query := ms.searchInput.Value()
 			ms.filterModels(query)
@@ -296,7 +296,7 @@ func (ms *ModelSelector) SetModels(models []api.Model) {
 // SetSelectedModel sets the currently selected model
 func (ms *ModelSelector) SetSelectedModel(model api.Model) {
 	ms.selectedModel = &model
-	
+
 	// Find and select the model in the list
 	for i, item := range ms.list.Items() {
 		if modelItem, ok := item.(ModelItem); ok {
@@ -378,17 +378,17 @@ func (ms *ModelSelector) updateList() {
 		sort.Slice(models, func(i, j int) bool {
 			usageI := ms.usage[models[i].ID]
 			usageJ := ms.usage[models[j].ID]
-			
+
 			if usageI == nil {
 				return false
 			}
 			if usageJ == nil {
 				return true
 			}
-			
+
 			return usageI.LastUsed.After(usageJ.LastUsed)
 		})
-		
+
 		// Take only recent models
 		if len(models) > 10 {
 			models = models[:10]
@@ -411,7 +411,7 @@ func (ms *ModelSelector) buildModelItems(models []api.Model) {
 
 		// Sort providers
 		providerOrder := []api.Provider{api.ProviderAnthropic, api.ProviderOpenAI, api.ProviderOpenRouter}
-		
+
 		for _, provider := range providerOrder {
 			if providerModels, exists := providers[provider]; exists {
 				// Sort models within provider
@@ -457,16 +457,16 @@ func (ms *ModelSelector) buildModelItems(models []api.Model) {
 // renderHeader renders the header with title and filters
 func (ms *ModelSelector) renderHeader() string {
 	var parts []string
-	
+
 	title := "AI Models"
 	if ms.showFavorites {
 		title += " (Favorites)"
 	} else if ms.showRecent {
 		title += " (Recent)"
 	}
-	
+
 	parts = append(parts, ModelTitleStyle.Render(title))
-	
+
 	// Filter indicators
 	var filters []string
 	if ms.groupByProvider {
@@ -475,11 +475,11 @@ func (ms *ModelSelector) renderHeader() string {
 	if len(ms.models) > 0 {
 		filters = append(filters, fmt.Sprintf("%d models", len(ms.models)))
 	}
-	
+
 	if len(filters) > 0 {
 		parts = append(parts, ModelFilterStyle.Render(strings.Join(filters, " • ")))
 	}
-	
+
 	return strings.Join(parts, " ")
 }
 
@@ -504,7 +504,7 @@ func (ms *ModelSelector) renderModelDetails() string {
 	content.WriteString(fmt.Sprintf("Model ID: %s\n", model.ID))
 	content.WriteString(fmt.Sprintf("Max Tokens: %s\n", humanize.Comma(int64(model.MaxTokens))))
 	content.WriteString(fmt.Sprintf("Context Window: %s tokens\n", humanize.Comma(int64(model.ContextWindow))))
-	
+
 	// Favorite status
 	if ms.favorites[model.ID] {
 		content.WriteString("Status: ★ Favorite\n")
@@ -532,7 +532,7 @@ func (ms *ModelSelector) renderModelDetails() string {
 	// Capabilities (based on provider and model)
 	content.WriteString(ModelDetailSectionStyle.Render("Capabilities"))
 	content.WriteString("\n")
-	
+
 	capabilities := ms.getModelCapabilities(model)
 	for _, capability := range capabilities {
 		content.WriteString(fmt.Sprintf("• %s\n", capability))
@@ -597,15 +597,15 @@ func (ms *ModelSelector) selectModel(model api.Model) tea.Cmd {
 // ModelDelegate handles rendering of individual model items
 func NewModelDelegate() list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
-	
+
 	d.Styles.SelectedTitle = SelectedModelStyle
 	d.Styles.SelectedDesc = SelectedModelDescStyle
 	d.Styles.NormalTitle = ModelItemStyle
 	d.Styles.NormalDesc = ModelItemDescStyle
-	
+
 	d.SetHeight(2)
 	d.SetSpacing(1)
-	
+
 	return d
 }
 
@@ -613,77 +613,77 @@ func NewModelDelegate() list.DefaultDelegate {
 var (
 	// Container styles
 	ModelContainerStyle = lipgloss.NewStyle().
-		Padding(1)
+				Padding(1)
 
 	ModelTitleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true)
+			Foreground(lipgloss.Color("#7C3AED")).
+			Bold(true)
 
 	ModelFilterStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		Italic(true)
+				Foreground(lipgloss.Color("#6B7280")).
+				Italic(true)
 
 	// List styles
 	ModelListTitleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true).
-		Padding(0, 1)
+				Foreground(lipgloss.Color("#7C3AED")).
+				Bold(true).
+				Padding(0, 1)
 
 	ModelListPaginationStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280"))
+					Foreground(lipgloss.Color("#6B7280"))
 
 	ModelListStatusStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#059669"))
+				Foreground(lipgloss.Color("#059669"))
 
 	// Item styles
 	ModelItemStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#1F2937"))
+			Foreground(lipgloss.Color("#1F2937"))
 
 	ModelItemDescStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280"))
+				Foreground(lipgloss.Color("#6B7280"))
 
 	SelectedModelStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true).
-		Background(lipgloss.Color("#F3F4F6"))
+				Foreground(lipgloss.Color("#7C3AED")).
+				Bold(true).
+				Background(lipgloss.Color("#F3F4F6"))
 
 	SelectedModelDescStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Background(lipgloss.Color("#F3F4F6"))
+				Foreground(lipgloss.Color("#7C3AED")).
+				Background(lipgloss.Color("#F3F4F6"))
 
 	// Search styles
 	ModelSearchStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#7C3AED")).
-		Padding(0, 1).
-		MarginBottom(1)
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#7C3AED")).
+				Padding(0, 1).
+				MarginBottom(1)
 
 	// Detail styles
 	ModelDetailContainerStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#D1D5DB")).
-		Padding(2)
+					Border(lipgloss.RoundedBorder()).
+					BorderForeground(lipgloss.Color("#D1D5DB")).
+					Padding(2)
 
 	ModelDetailTitleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true)
+				Foreground(lipgloss.Color("#7C3AED")).
+				Bold(true)
 
 	ModelDetailProviderStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#059669")).
-		Bold(true)
+					Foreground(lipgloss.Color("#059669")).
+					Bold(true)
 
 	ModelDetailSectionStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#374151")).
-		Bold(true).
-		Underline(true)
+				Foreground(lipgloss.Color("#374151")).
+				Bold(true).
+				Underline(true)
 
 	// Footer styles
 	ModelFooterStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		BorderTop(true).
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("#E5E7EB")).
-		PaddingTop(1)
+				Foreground(lipgloss.Color("#6B7280")).
+				BorderTop(true).
+				BorderStyle(lipgloss.NormalBorder()).
+				BorderForeground(lipgloss.Color("#E5E7EB")).
+				PaddingTop(1)
 
 	// Loading and error styles (LoadingStyle is defined in components.go)
 )
@@ -693,15 +693,15 @@ func NewModelSelectorFromState(state *app.ModelsState, width, height int) *Model
 	ms := NewModelSelector(width, height)
 	ms.SetModels(state.AvailableModels)
 	ms.loading = state.Loading
-	
+
 	if state.Error != nil {
 		ms.errorMessage = state.Error.Error()
 	}
-	
+
 	if state.CurrentModel.ID != "" {
 		ms.SetSelectedModel(state.CurrentModel)
 	}
-	
+
 	return ms
 }
 
@@ -709,13 +709,13 @@ func NewModelSelectorFromState(state *app.ModelsState, width, height int) *Model
 func (ms *ModelSelector) UpdateFromState(state *app.ModelsState) {
 	ms.SetModels(state.FilteredModels)
 	ms.loading = state.Loading
-	
+
 	if state.Error != nil {
 		ms.errorMessage = state.Error.Error()
 	} else {
 		ms.errorMessage = ""
 	}
-	
+
 	if state.CurrentModel.ID != "" {
 		ms.SetSelectedModel(state.CurrentModel)
 	}

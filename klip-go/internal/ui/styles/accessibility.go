@@ -18,18 +18,18 @@ type TerminalCapabilities struct {
 	Has256Color       bool
 	HasBasicColor     bool
 	IsMonochrome      bool
-	
+
 	// Text formatting support
 	SupportsBold      bool
 	SupportsItalic    bool
 	SupportsUnderline bool
 	SupportsStrike    bool
 	SupportsBlink     bool
-	
+
 	// Unicode and character support
-	SupportsUnicode   bool
-	SupportsEmoji     bool
-	
+	SupportsUnicode bool
+	SupportsEmoji   bool
+
 	// Layout capabilities
 	SupportsBoxDrawing      bool
 	SupportsMouseInput      bool
@@ -38,82 +38,82 @@ type TerminalCapabilities struct {
 	SupportsAltScreen       bool // alias
 	SupportsMouse           bool // alias
 	SupportsHyperlinks      bool
-	
+
 	// Performance characteristics
-	IsSlowTerminal   bool
-	HasLowBandwidth  bool
-	LimitedBuffer    bool
-	
+	IsSlowTerminal  bool
+	HasLowBandwidth bool
+	LimitedBuffer   bool
+
 	// Terminal identification
-	TerminalType     string
-	TerminalVersion  string
-	IsSSH            bool
-	IsRemote         bool
-	
+	TerminalType    string
+	TerminalVersion string
+	IsSSH           bool
+	IsRemote        bool
+
 	// Platform info
-	Platform         string
-	Architecture     string
+	Platform     string
+	Architecture string
 }
 
 // AccessibilityManager handles accessibility features and compliance
 type AccessibilityManager struct {
-	theme              *Theme
-	capabilities       *TerminalCapabilities
-	preferences        *AccessibilityPreferences
-	contrastChecker    *ContrastChecker
-	screenReaderMode   bool
-	highContrastMode   bool
-	reducedMotionMode  bool
-	colorBlindSupport  bool
+	theme             *Theme
+	capabilities      *TerminalCapabilities
+	preferences       *AccessibilityPreferences
+	contrastChecker   *ContrastChecker
+	screenReaderMode  bool
+	highContrastMode  bool
+	reducedMotionMode bool
+	colorBlindSupport bool
 }
 
 // AccessibilityPreferences stores user accessibility preferences
 type AccessibilityPreferences struct {
 	// Visual preferences
-	HighContrast        bool
-	ReducedMotion       bool
-	LargeText           bool
-	ReduceTransparency  bool
-	PreferSimpleColors  bool
-	
+	HighContrast       bool
+	ReducedMotion      bool
+	LargeText          bool
+	ReduceTransparency bool
+	PreferSimpleColors bool
+
 	// Color vision preferences
-	ColorBlindType      ColorBlindType
+	ColorBlindType       ColorBlindType
 	UseColorBlindPalette bool
-	
+
 	// Screen reader preferences
-	ScreenReaderMode    bool
-	VerboseDescriptions bool
+	ScreenReaderMode     bool
+	VerboseDescriptions  bool
 	StructuralNavigation bool
-	
+
 	// Motor accessibility
-	StickyKeys          bool
-	SlowKeys            bool
-	ReduceInteraction   bool
-	
+	StickyKeys        bool
+	SlowKeys          bool
+	ReduceInteraction bool
+
 	// Cognitive accessibility
-	ReduceComplexity    bool
-	SimplifyLanguage    bool
-	ShowHelpText        bool
+	ReduceComplexity bool
+	SimplifyLanguage bool
+	ShowHelpText     bool
 }
 
 // ColorBlindType represents different types of color vision deficiency
 type ColorBlindType int
 
 const (
-	ColorBlindNone ColorBlindType = iota
-	ColorBlindProtanopia    // Red-blind
-	ColorBlindDeuteranopia  // Green-blind
-	ColorBlindTritanopia    // Blue-blind
-	ColorBlindProtanomaly   // Red-weak
-	ColorBlindDeuteranomaly // Green-weak
-	ColorBlindTritanomaly   // Blue-weak
-	ColorBlindMonochromacy  // Complete color blindness
+	ColorBlindNone          ColorBlindType = iota
+	ColorBlindProtanopia                   // Red-blind
+	ColorBlindDeuteranopia                 // Green-blind
+	ColorBlindTritanopia                   // Blue-blind
+	ColorBlindProtanomaly                  // Red-weak
+	ColorBlindDeuteranomaly                // Green-weak
+	ColorBlindTritanomaly                  // Blue-weak
+	ColorBlindMonochromacy                 // Complete color blindness
 )
 
 // ContrastChecker validates color contrast ratios for accessibility
 type ContrastChecker struct {
-	minNormalContrast float64 // WCAG AA: 4.5:1
-	minLargeContrast  float64 // WCAG AA Large: 3:1
+	minNormalContrast   float64 // WCAG AA: 4.5:1
+	minLargeContrast    float64 // WCAG AA Large: 3:1
 	minEnhancedContrast float64 // WCAG AAA: 7:1
 }
 
@@ -138,37 +138,37 @@ func NewAccessibilityManager(theme *Theme, capabilities *TerminalCapabilities) *
 			minEnhancedContrast: 7.0,
 		},
 	}
-	
+
 	// Apply detected preferences
 	am.applyPreferences()
-	
+
 	return am
 }
 
 // detectAccessibilityPreferences detects accessibility preferences from environment
 func detectAccessibilityPreferences() *AccessibilityPreferences {
 	prefs := &AccessibilityPreferences{}
-	
+
 	// Check environment variables
 	prefs.HighContrast = isEnvTrue("ACCESSIBILITY_HIGH_CONTRAST") ||
 		isEnvTrue("FORCE_HIGH_CONTRAST") ||
 		isEnvTrue("HIGH_CONTRAST")
-	
+
 	prefs.ReducedMotion = isEnvTrue("ACCESSIBILITY_REDUCE_MOTION") ||
 		isEnvTrue("REDUCE_MOTION")
-	
+
 	prefs.LargeText = isEnvTrue("ACCESSIBILITY_LARGE_TEXT") ||
 		isEnvTrue("LARGE_TEXT")
-	
+
 	prefs.ScreenReaderMode = isEnvTrue("ACCESSIBILITY_SCREEN_READER") ||
 		isEnvTrue("SCREEN_READER") ||
 		os.Getenv("NVDA") != "" ||
 		os.Getenv("JAWS") != "" ||
 		os.Getenv("VOICEOVER") != ""
-	
+
 	prefs.VerboseDescriptions = prefs.ScreenReaderMode ||
 		isEnvTrue("ACCESSIBILITY_VERBOSE")
-	
+
 	// Detect color blind preferences
 	colorBlindEnv := strings.ToLower(os.Getenv("COLOR_BLIND_TYPE"))
 	switch colorBlindEnv {
@@ -194,14 +194,14 @@ func detectAccessibilityPreferences() *AccessibilityPreferences {
 		prefs.ColorBlindType = ColorBlindMonochromacy
 		prefs.UseColorBlindPalette = true
 	}
-	
+
 	// Cognitive preferences
 	prefs.ReduceComplexity = isEnvTrue("ACCESSIBILITY_SIMPLE_MODE") ||
 		isEnvTrue("SIMPLE_MODE")
-	
+
 	prefs.ShowHelpText = prefs.ScreenReaderMode ||
 		isEnvTrue("ACCESSIBILITY_SHOW_HELP")
-	
+
 	return prefs
 }
 
@@ -216,35 +216,35 @@ func (am *AccessibilityManager) applyPreferences() {
 // CreateAccessibleTheme creates a theme optimized for accessibility
 func (am *AccessibilityManager) CreateAccessibleTheme(baseTheme *Theme, level AccessibilityLevel) *Theme {
 	accessibleTheme := *baseTheme // Copy theme
-	
+
 	// Apply high contrast if needed
 	if am.highContrastMode {
 		accessibleTheme = *am.createHighContrastTheme(baseTheme)
 	}
-	
+
 	// Apply color blind friendly palette if needed
 	if am.colorBlindSupport {
 		accessibleTheme.Colors = am.adaptColorsForColorBlindness(accessibleTheme.Colors, am.preferences.ColorBlindType)
 	}
-	
+
 	// Ensure color contrast compliance
 	accessibleTheme.Colors = am.ensureContrastCompliance(accessibleTheme.Colors, level)
-	
+
 	// Adjust component styles for accessibility
 	accessibleTheme.Components = am.adaptComponentsForAccessibility(accessibleTheme.Components)
-	
+
 	// Adjust spacing for better usability
 	if am.preferences.LargeText {
 		accessibleTheme.Spacing = am.increasedSpacing(accessibleTheme.Spacing)
 	}
-	
+
 	return &accessibleTheme
 }
 
 // createHighContrastTheme creates a high contrast version of the theme
 func (am *AccessibilityManager) createHighContrastTheme(baseTheme *Theme) *Theme {
 	highContrastTheme := *baseTheme
-	
+
 	if baseTheme.IsDark {
 		// Dark high contrast theme
 		highContrastTheme.Colors = ColorPalette{
@@ -332,7 +332,7 @@ func (am *AccessibilityManager) createHighContrastTheme(baseTheme *Theme) *Theme
 			CodeBackground:   lipgloss.Color("#FFFFFF"),
 		}
 	}
-	
+
 	highContrastTheme.IsHighContrast = true
 	return &highContrastTheme
 }
@@ -340,34 +340,34 @@ func (am *AccessibilityManager) createHighContrastTheme(baseTheme *Theme) *Theme
 // adaptColorsForColorBlindness adapts colors for different types of color blindness
 func (am *AccessibilityManager) adaptColorsForColorBlindness(colors ColorPalette, colorBlindType ColorBlindType) ColorPalette {
 	adapted := colors
-	
+
 	switch colorBlindType {
 	case ColorBlindProtanopia, ColorBlindProtanomaly:
 		// Red-blind: Replace reds with distinguishable alternatives
-		adapted.Primary = lipgloss.Color("#0066CC")      // Blue
-		adapted.Error = lipgloss.Color("#FF8800")        // Orange
-		adapted.Success = lipgloss.Color("#0088CC")      // Blue-green
-		adapted.Warning = lipgloss.Color("#FFAA00")      // Amber
-		
+		adapted.Primary = lipgloss.Color("#0066CC") // Blue
+		adapted.Error = lipgloss.Color("#FF8800")   // Orange
+		adapted.Success = lipgloss.Color("#0088CC") // Blue-green
+		adapted.Warning = lipgloss.Color("#FFAA00") // Amber
+
 	case ColorBlindDeuteranopia, ColorBlindDeuteranomaly:
 		// Green-blind: Replace greens with distinguishable alternatives
-		adapted.Success = lipgloss.Color("#0066FF")      // Blue
-		adapted.Primary = lipgloss.Color("#8800CC")      // Purple
-		adapted.Info = lipgloss.Color("#0088FF")         // Light blue
-		adapted.Accent = lipgloss.Color("#CC6600")       // Orange
-		
+		adapted.Success = lipgloss.Color("#0066FF") // Blue
+		adapted.Primary = lipgloss.Color("#8800CC") // Purple
+		adapted.Info = lipgloss.Color("#0088FF")    // Light blue
+		adapted.Accent = lipgloss.Color("#CC6600")  // Orange
+
 	case ColorBlindTritanopia, ColorBlindTritanomaly:
 		// Blue-blind: Replace blues with distinguishable alternatives
-		adapted.Info = lipgloss.Color("#CC0066")         // Magenta
-		adapted.Primary = lipgloss.Color("#CC6600")      // Orange
-		adapted.Secondary = lipgloss.Color("#009900")    // Green
-		adapted.Accent = lipgloss.Color("#990099")       // Purple
-		
+		adapted.Info = lipgloss.Color("#CC0066")      // Magenta
+		adapted.Primary = lipgloss.Color("#CC6600")   // Orange
+		adapted.Secondary = lipgloss.Color("#009900") // Green
+		adapted.Accent = lipgloss.Color("#990099")    // Purple
+
 	case ColorBlindMonochromacy:
 		// Complete color blindness: Use only grayscale
 		return am.convertToGrayscale(colors)
 	}
-	
+
 	return adapted
 }
 
@@ -420,7 +420,7 @@ func (am *AccessibilityManager) convertToGrayscale(colors ColorPalette) ColorPal
 func (am *AccessibilityManager) ensureContrastCompliance(colors ColorPalette, level AccessibilityLevel) ColorPalette {
 	compliant := colors
 	minRatio := am.getMinContrastRatio(level)
-	
+
 	// Check and fix primary text combinations
 	if !am.hasAdequateContrast(colors.Text, colors.Background, minRatio) {
 		if am.theme.IsDark {
@@ -429,12 +429,12 @@ func (am *AccessibilityManager) ensureContrastCompliance(colors ColorPalette, le
 			compliant.Text = lipgloss.Color("#000000")
 		}
 	}
-	
+
 	// Check and fix button combinations
 	if !am.hasAdequateContrast(colors.TextInverse, colors.Primary, minRatio) {
 		compliant.TextInverse = am.findContrastingColor(colors.Primary, minRatio)
 	}
-	
+
 	// Check and fix state color combinations
 	stateColors := []struct {
 		bg   *lipgloss.Color
@@ -445,52 +445,52 @@ func (am *AccessibilityManager) ensureContrastCompliance(colors ColorPalette, le
 		{&compliant.Warning, colors.TextInverse},
 		{&compliant.Info, colors.TextInverse},
 	}
-	
+
 	for _, sc := range stateColors {
 		if !am.hasAdequateContrast(sc.text, *sc.bg, minRatio) {
 			*sc.bg = am.adjustColorForContrast(*sc.bg, sc.text, minRatio)
 		}
 	}
-	
+
 	return compliant
 }
 
 // adaptComponentsForAccessibility adapts component styles for accessibility
 func (am *AccessibilityManager) adaptComponentsForAccessibility(components ComponentStyles) ComponentStyles {
 	adapted := components
-	
+
 	// Ensure focus indicators are clearly visible
 	adapted.BorderWidth = max(adapted.BorderWidth, 2)
-	
+
 	// Simplify borders for screen readers
 	if am.screenReaderMode {
 		adapted.BorderStyle = lipgloss.NormalBorder()
 		adapted.BorderRadius = 0
 	}
-	
+
 	// Reduce animations for motion sensitivity
 	if am.reducedMotionMode {
 		adapted.AnimationSpeed = "none"
 		adapted.TransitionDuration = "0ms"
 	}
-	
+
 	// Increase touch targets for motor accessibility
 	if am.preferences.ReduceInteraction {
 		adapted.ButtonHeight = max(adapted.ButtonHeight, 4)
 		adapted.InputHeight = max(adapted.InputHeight, 4)
 		adapted.MenuItemHeight = max(adapted.MenuItemHeight, 2)
 	}
-	
+
 	return adapted
 }
 
 // increasedSpacing increases spacing for better readability
 func (am *AccessibilityManager) increasedSpacing(spacing Spacing) Spacing {
 	increased := spacing
-	
+
 	// Increase base spacing
 	increased.Base = int(float64(spacing.Base) * 1.5)
-	
+
 	// Recalculate derived spacings
 	increased.XSmall = increased.Base / 4
 	increased.Small = increased.Base / 2
@@ -498,12 +498,12 @@ func (am *AccessibilityManager) increasedSpacing(spacing Spacing) Spacing {
 	increased.Large = increased.Base + increased.Base/2
 	increased.XLarge = increased.Base * 2
 	increased.XXLarge = increased.Base * 3
-	
+
 	// Increase component spacing
 	increased.ComponentSpacing = int(float64(spacing.ComponentSpacing) * 1.3)
 	increased.SectionSpacing = int(float64(spacing.SectionSpacing) * 1.3)
 	increased.ElementSpacing = int(float64(spacing.ElementSpacing) * 1.2)
-	
+
 	return increased
 }
 
@@ -522,21 +522,21 @@ func (am *AccessibilityManager) calculateContrastRatio(color1, background lipglo
 	if err != nil {
 		return 1.0 // Default to minimal contrast on error
 	}
-	
+
 	c2, err := colorful.Hex(string(background))
 	if err != nil {
 		return 1.0
 	}
-	
+
 	// Calculate relative luminance
 	l1 := am.relativeLuminance(c1)
 	l2 := am.relativeLuminance(c2)
-	
+
 	// Ensure l1 is the lighter color
 	if l1 < l2 {
 		l1, l2 = l2, l1
 	}
-	
+
 	// Calculate contrast ratio
 	return (l1 + 0.05) / (l2 + 0.05)
 }
@@ -547,7 +547,7 @@ func (am *AccessibilityManager) relativeLuminance(c colorful.Color) float64 {
 	r := am.linearizeColorComponent(c.R)
 	g := am.linearizeColorComponent(c.G)
 	b := am.linearizeColorComponent(c.B)
-	
+
 	// Calculate luminance using ITU-R BT.709 coefficients
 	return 0.2126*r + 0.7152*g + 0.0722*b
 }
@@ -567,22 +567,22 @@ func (am *AccessibilityManager) findContrastingColor(background lipgloss.Color, 
 	if am.hasAdequateContrast(white, background, minRatio) {
 		return white
 	}
-	
+
 	// Try black
 	black := lipgloss.Color("#000000")
 	if am.hasAdequateContrast(black, background, minRatio) {
 		return black
 	}
-	
+
 	// If neither works, find the best contrast
 	bg, err := colorful.Hex(string(background))
 	if err != nil {
 		return black // Fallback
 	}
-	
+
 	// Calculate luminance of background
 	bgLuminance := am.relativeLuminance(bg)
-	
+
 	// Choose white or black based on background luminance
 	if bgLuminance > 0.5 {
 		return black
@@ -596,18 +596,18 @@ func (am *AccessibilityManager) adjustColorForContrast(color, textColor lipgloss
 	if err != nil {
 		return color
 	}
-	
+
 	// Try darkening/lightening the color
 	h, s, l := c.Hsl()
-	
+
 	// Determine if we need to lighten or darken
 	textC, err := colorful.Hex(string(textColor))
 	if err != nil {
 		return color
 	}
-	
+
 	textLuminance := am.relativeLuminance(textC)
-	
+
 	// Adjust lightness to achieve target contrast
 	step := 0.05
 	if textLuminance > 0.5 {
@@ -621,7 +621,7 @@ func (am *AccessibilityManager) adjustColorForContrast(color, textColor lipgloss
 			l += step
 		}
 	}
-	
+
 	return lipgloss.Color(colorful.Hsl(h, s, l).Hex())
 }
 
@@ -662,18 +662,18 @@ func (am *AccessibilityManager) CreateAccessibleButton(text, ariaLabel, descript
 	if am.screenReaderMode {
 		var parts []string
 		parts = append(parts, "Button: "+text)
-		
+
 		if ariaLabel != "" && ariaLabel != text {
 			parts = append(parts, ariaLabel)
 		}
-		
+
 		if description != "" && am.preferences.VerboseDescriptions {
 			parts = append(parts, description)
 		}
-		
+
 		return strings.Join(parts, " - ")
 	}
-	
+
 	return text
 }
 
@@ -684,13 +684,13 @@ func (am *AccessibilityManager) CreateHeadingHierarchy(level int, text string) s
 	if am.screenReaderMode {
 		return fmt.Sprintf("Heading level %d: %s", level, text)
 	}
-	
+
 	// Visual heading styling
 	markers := []string{"#", "##", "###", "####", "#####", "######"}
 	if level > 0 && level <= len(markers) {
 		return markers[level-1] + " " + text
 	}
-	
+
 	return text
 }
 
@@ -716,7 +716,7 @@ func (am *AccessibilityManager) IsAccessibilityEnabled() bool {
 // GetAccessibilityStatus returns a summary of enabled accessibility features
 func (am *AccessibilityManager) GetAccessibilityStatus() string {
 	var features []string
-	
+
 	if am.highContrastMode {
 		features = append(features, "High Contrast")
 	}
@@ -732,11 +732,11 @@ func (am *AccessibilityManager) GetAccessibilityStatus() string {
 	if am.preferences.LargeText {
 		features = append(features, "Large Text")
 	}
-	
+
 	if len(features) == 0 {
 		return "No accessibility features enabled"
 	}
-	
+
 	return "Accessibility: " + strings.Join(features, ", ")
 }
 

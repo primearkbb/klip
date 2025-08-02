@@ -425,7 +425,7 @@ func (rs *RetryStrategy) CalculateDelay(attempt int) time.Duration {
 
 	// Exponential backoff
 	delay := float64(rs.baseDelay) * math.Pow(rs.backoffFactor, float64(attempt-1))
-	
+
 	// Apply maximum delay limit
 	if delay > float64(rs.maxDelay) {
 		delay = float64(rs.maxDelay)
@@ -482,10 +482,10 @@ func (rs *RetryStrategy) ShouldRetry(err error, attempt int) bool {
 
 // RetryableOperation represents an operation that can be retried
 type RetryableOperation struct {
-	model     *Model
-	strategy  *RetryStrategy
-	operation func() error
-	onRetry   func(attempt int, err error)
+	model      *Model
+	strategy   *RetryStrategy
+	operation  func() error
+	onRetry    func(attempt int, err error)
 	maxRetries int
 }
 
@@ -514,7 +514,7 @@ func (ro *RetryableOperation) WithOnRetry(callback func(int, error)) *RetryableO
 func (ro *RetryableOperation) Execute() tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		var lastErr error
-		
+
 		for attempt := 1; attempt <= ro.strategy.maxRetries; attempt++ {
 			// Execute the operation
 			err := ro.operation()
@@ -537,11 +537,11 @@ func (ro *RetryableOperation) Execute() tea.Cmd {
 			// Calculate delay and wait
 			if attempt < ro.strategy.maxRetries {
 				delay := ro.strategy.CalculateDelay(attempt)
-				ro.model.logger.Debug("Retrying operation", 
+				ro.model.logger.Debug("Retrying operation",
 					"attempt", attempt,
 					"delay", delay,
 					"error", err)
-				
+
 				time.Sleep(delay)
 			}
 		}

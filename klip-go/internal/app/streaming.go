@@ -49,7 +49,7 @@ func (ss *StreamingState) AddChunk(content string) {
 	if !ss.Active {
 		return
 	}
-	
+
 	ss.Buffer.WriteString(content)
 	ss.ChunkCount++
 	ss.LastChunkTime = time.Now()
@@ -269,7 +269,7 @@ func (sm *StreamingManager) finishStreaming() {
 		go func() {
 			metrics := api.ResponseMetrics{
 				LatencyMs:      sm.currentStream.GetDuration().Milliseconds(),
-				TokensInput:    0, // TODO: Calculate from request
+				TokensInput:    0,                            // TODO: Calculate from request
 				TokensOutput:   len(strings.Fields(content)), // Rough estimate
 				ResponseLength: len(content),
 			}
@@ -390,7 +390,7 @@ func (pt *ProgressTracker) GetETA() time.Duration {
 	if pt.estimatedEnd.IsZero() || pt.completed || pt.cancelled {
 		return 0
 	}
-	
+
 	eta := time.Until(pt.estimatedEnd)
 	if eta < 0 {
 		return 0
@@ -413,37 +413,37 @@ func (pt *ProgressTracker) GetStatusText() string {
 	if pt.error != nil {
 		return fmt.Sprintf("Error: %v", pt.error)
 	}
-	
+
 	if pt.cancelled {
 		return "Cancelled"
 	}
-	
+
 	if pt.completed {
 		return "Completed"
 	}
-	
+
 	status := pt.status
 	if pt.subStatus != "" {
 		status = fmt.Sprintf("%s - %s", status, pt.subStatus)
 	}
-	
+
 	return status
 }
 
 // GetDetailedStatus returns detailed status information
 func (pt *ProgressTracker) GetDetailedStatus() string {
 	elapsed := pt.GetElapsed()
-	
+
 	var parts []string
 	parts = append(parts, fmt.Sprintf("Operation: %s", pt.operation))
 	parts = append(parts, fmt.Sprintf("Progress: %d%%", pt.GetProgressPercent()))
 	parts = append(parts, fmt.Sprintf("Status: %s", pt.GetStatusText()))
 	parts = append(parts, fmt.Sprintf("Elapsed: %s", formatDuration(elapsed)))
-	
+
 	if eta := pt.GetETA(); eta > 0 {
 		parts = append(parts, fmt.Sprintf("ETA: %s", formatDuration(eta)))
 	}
-	
+
 	return strings.Join(parts, "\n")
 }
 
@@ -525,10 +525,10 @@ func (sm *StreamingMetrics) AddChunk(size int, tokens int) {
 	sm.ChunksReceived++
 	sm.BytesReceived += int64(size)
 	sm.TokensReceived += tokens
-	
+
 	// Update average chunk size
 	sm.AverageChunkSize = float64(sm.BytesReceived) / float64(sm.ChunksReceived)
-	
+
 	// Calculate current speed
 	duration := time.Since(sm.StartTime).Seconds()
 	if duration > 0 {

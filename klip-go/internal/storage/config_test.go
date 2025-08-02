@@ -9,7 +9,7 @@ import (
 
 func setupTestConfigManager(t *testing.T) (*ConfigManager, string) {
 	tempDir := t.TempDir()
-	
+
 	// Mock home directory
 	oldHome := os.Getenv("HOME")
 	os.Setenv("HOME", tempDir)
@@ -80,11 +80,11 @@ func TestConfigManager_SaveAndLoadConfig(t *testing.T) {
 			SyntaxHighlight: false,
 		},
 		Analytics: &AnalyticsConfig{
-			Enabled:             false,
-			RetainDays:          7,
-			MaxFileSizeMB:       5,
-			EnableCostTracking:  false,
-			AnonymizeContent:    true,
+			Enabled:            false,
+			RetainDays:         7,
+			MaxFileSizeMB:      5,
+			EnableCostTracking: false,
+			AnonymizeContent:   true,
 		},
 		Logging: &LoggingConfig{
 			Enabled:       false,
@@ -257,22 +257,22 @@ func TestConfigManager_MigrateFromDeno(t *testing.T) {
 		"defaultProvider": "openai",
 		"defaultModel":    "gpt-4o",
 		"settings": map[string]interface{}{
-			"temperature":       0.8,
-			"maxTokens":        2048,
-			"streamResponses":  false,
+			"temperature":     0.8,
+			"maxTokens":       2048,
+			"streamResponses": false,
 		},
 		"customSetting": "custom_value",
 	}
 
 	configDir := filepath.Join(tempDir, ".klip")
 	os.MkdirAll(configDir, 0700)
-	
+
 	denoConfigFile := filepath.Join(configDir, "config.json")
 	data, err := json.Marshal(denoConfig)
 	if err != nil {
 		t.Fatalf("Failed to marshal Deno config: %v", err)
 	}
-	
+
 	err = os.WriteFile(denoConfigFile, data, 0600)
 	if err != nil {
 		t.Fatalf("Failed to write Deno config: %v", err)

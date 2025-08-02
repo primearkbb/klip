@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/huh"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/john/klip/internal/app"
 	"github.com/john/klip/internal/storage"
@@ -566,13 +566,13 @@ func (sf *SettingsForm) configsEqual(a, b *storage.Config) bool {
 	if a == nil || b == nil {
 		return false
 	}
-	
+
 	// Compare key fields (simplified)
 	return a.DefaultModel == b.DefaultModel &&
-		   a.EnableLogging == b.EnableLogging &&
-		   a.EnableAnalytics == b.EnableAnalytics &&
-		   a.Theme == b.Theme &&
-		   a.ShowTimestamps == b.ShowTimestamps
+		a.EnableLogging == b.EnableLogging &&
+		a.EnableAnalytics == b.EnableAnalytics &&
+		a.Theme == b.Theme &&
+		a.ShowTimestamps == b.ShowTimestamps
 }
 
 // copyConfig creates a deep copy of a configuration
@@ -580,39 +580,39 @@ func (sf *SettingsForm) copyConfig(config *storage.Config) *storage.Config {
 	if config == nil {
 		return &storage.Config{}
 	}
-	
+
 	// Create a new config with copied values
 	return &storage.Config{
-		DefaultModel:            config.DefaultModel,
-		EnableLogging:           config.EnableLogging,
-		EnableAnalytics:         config.EnableAnalytics,
-		LogDirectory:            config.LogDirectory,
-		MaxHistory:              config.MaxHistory,
-		RequestTimeout:          config.RequestTimeout,
-		AnthropicAPIKey:         config.AnthropicAPIKey,
-		OpenAIAPIKey:            config.OpenAIAPIKey,
-		OpenRouterAPIKey:        config.OpenRouterAPIKey,
-		DefaultProvider:         config.DefaultProvider,
-		EnableWebSearch:         config.EnableWebSearch,
-		BaseURL:                 config.BaseURL,
-		MaxRetries:              config.MaxRetries,
-		Theme:                   config.Theme,
-		ShowTimestamps:          config.ShowTimestamps,
-		SyntaxHighlighting:      config.SyntaxHighlighting,
-		ShowTokenCount:          config.ShowTokenCount,
-		AutoScroll:              config.AutoScroll,
-		MaxLineLength:           config.MaxLineLength,
-		EnableAnimations:        config.EnableAnimations,
-		ShowTypingIndicator:     config.ShowTypingIndicator,
-		AnimationSpeed:          config.AnimationSpeed,
-		DebugMode:               config.DebugMode,
-		ConfigDir:               config.ConfigDir,
-		LogLevel:                config.LogLevel,
-		UserAgent:               config.UserAgent,
-		StreamBufferSize:        config.StreamBufferSize,
-		MaxConcurrentRequests:   config.MaxConcurrentRequests,
-		CacheModels:             config.CacheModels,
-		CacheDuration:           config.CacheDuration,
+		DefaultModel:          config.DefaultModel,
+		EnableLogging:         config.EnableLogging,
+		EnableAnalytics:       config.EnableAnalytics,
+		LogDirectory:          config.LogDirectory,
+		MaxHistory:            config.MaxHistory,
+		RequestTimeout:        config.RequestTimeout,
+		AnthropicAPIKey:       config.AnthropicAPIKey,
+		OpenAIAPIKey:          config.OpenAIAPIKey,
+		OpenRouterAPIKey:      config.OpenRouterAPIKey,
+		DefaultProvider:       config.DefaultProvider,
+		EnableWebSearch:       config.EnableWebSearch,
+		BaseURL:               config.BaseURL,
+		MaxRetries:            config.MaxRetries,
+		Theme:                 config.Theme,
+		ShowTimestamps:        config.ShowTimestamps,
+		SyntaxHighlighting:    config.SyntaxHighlighting,
+		ShowTokenCount:        config.ShowTokenCount,
+		AutoScroll:            config.AutoScroll,
+		MaxLineLength:         config.MaxLineLength,
+		EnableAnimations:      config.EnableAnimations,
+		ShowTypingIndicator:   config.ShowTypingIndicator,
+		AnimationSpeed:        config.AnimationSpeed,
+		DebugMode:             config.DebugMode,
+		ConfigDir:             config.ConfigDir,
+		LogLevel:              config.LogLevel,
+		UserAgent:             config.UserAgent,
+		StreamBufferSize:      config.StreamBufferSize,
+		MaxConcurrentRequests: config.MaxConcurrentRequests,
+		CacheModels:           config.CacheModels,
+		CacheDuration:         config.CacheDuration,
 	}
 }
 
@@ -646,12 +646,12 @@ func (sf *SettingsForm) reset() tea.Cmd {
 func (sf *SettingsForm) renderHeader() string {
 	var title strings.Builder
 	title.WriteString(SettingsTitleStyle.Render("Settings"))
-	
+
 	if sf.unsavedChanges {
 		title.WriteString(" ")
 		title.WriteString(UnsavedChangesStyle.Render("●"))
 	}
-	
+
 	return title.String()
 }
 
@@ -664,7 +664,7 @@ func (sf *SettingsForm) renderSectionTabs() string {
 		SectionAdvanced:  "Advanced",
 		SectionAbout:     "About",
 	}
-	
+
 	var tabs []string
 	for _, section := range sf.sections {
 		name := sections[section]
@@ -674,21 +674,21 @@ func (sf *SettingsForm) renderSectionTabs() string {
 			tabs = append(tabs, InactiveTabStyle.Render(name))
 		}
 	}
-	
+
 	return TabContainerStyle.Render(strings.Join(tabs, ""))
 }
 
 // renderFooter renders the settings footer
 func (sf *SettingsForm) renderFooter() string {
 	var parts []string
-	
+
 	// Save indicator
 	if sf.unsavedChanges {
 		parts = append(parts, UnsavedChangesFooterStyle.Render("● Unsaved changes"))
 	} else {
 		parts = append(parts, SavedStyle.Render("✓ Saved"))
 	}
-	
+
 	// Keyboard shortcuts
 	shortcuts := []string{
 		"Ctrl+S: save",
@@ -697,7 +697,7 @@ func (sf *SettingsForm) renderFooter() string {
 		"F1-F5: jump to section",
 	}
 	parts = append(parts, strings.Join(shortcuts, " • "))
-	
+
 	return SettingsFooterStyle.Render(strings.Join(parts, " │ "))
 }
 
@@ -735,55 +735,55 @@ func (sf *SettingsForm) getSystemInfo() string {
 var (
 	// Container styles
 	SettingsContainerStyle = lipgloss.NewStyle().
-		Padding(1)
+				Padding(1)
 
 	SettingsTitleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true)
+				Foreground(lipgloss.Color("#7C3AED")).
+				Bold(true)
 
 	UnsavedChangesStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#F59E0B"))
+				Foreground(lipgloss.Color("#F59E0B"))
 
 	// Tab styles
 	TabContainerStyle = lipgloss.NewStyle().
-		BorderBottom(true).
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("#E5E7EB")).
-		MarginBottom(1)
+				BorderBottom(true).
+				BorderStyle(lipgloss.NormalBorder()).
+				BorderForeground(lipgloss.Color("#E5E7EB")).
+				MarginBottom(1)
 
 	ActiveTabStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Background(lipgloss.Color("#F3F4F6")).
-		Bold(true).
-		Padding(0, 2).
-		MarginRight(1)
+			Foreground(lipgloss.Color("#7C3AED")).
+			Background(lipgloss.Color("#F3F4F6")).
+			Bold(true).
+			Padding(0, 2).
+			MarginRight(1)
 
 	InactiveTabStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		Padding(0, 2).
-		MarginRight(1)
+				Foreground(lipgloss.Color("#6B7280")).
+				Padding(0, 2).
+				MarginRight(1)
 
 	// Footer styles
 	SettingsFooterStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		BorderTop(true).
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("#E5E7EB")).
-		PaddingTop(1)
+				Foreground(lipgloss.Color("#6B7280")).
+				BorderTop(true).
+				BorderStyle(lipgloss.NormalBorder()).
+				BorderForeground(lipgloss.Color("#E5E7EB")).
+				PaddingTop(1)
 
 	UnsavedChangesFooterStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#F59E0B")).
-		Bold(true)
+					Foreground(lipgloss.Color("#F59E0B")).
+					Bold(true)
 
 	SavedStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#10B981"))
+			Foreground(lipgloss.Color("#10B981"))
 )
 
 // Helper functions for integration with app state
 func NewSettingsFormFromState(state *app.SettingsState, width, height int) *SettingsForm {
 	sf := NewSettingsForm(state.Config, width, height)
 	sf.unsavedChanges = state.UnsavedChanges
-	
+
 	return sf
 }
 

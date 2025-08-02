@@ -34,7 +34,7 @@ func NewCommandRegistry() *CommandRegistry {
 
 	// Register built-in commands
 	registry.registerBuiltinCommands()
-	
+
 	return registry
 }
 
@@ -156,7 +156,7 @@ func (cr *CommandRegistry) registerBuiltinCommands() {
 // Register registers a command and its aliases
 func (cr *CommandRegistry) Register(cmd *Command) {
 	cr.commands[cmd.Name] = cmd
-	
+
 	// Register aliases
 	for _, alias := range cmd.Aliases {
 		cr.aliases[alias] = cmd.Name
@@ -167,17 +167,17 @@ func (cr *CommandRegistry) Register(cmd *Command) {
 func (cr *CommandRegistry) Get(name string) *Command {
 	// Remove leading slash if present
 	name = strings.TrimPrefix(name, "/")
-	
+
 	// Try direct lookup
 	if cmd, exists := cr.commands[name]; exists {
 		return cmd
 	}
-	
+
 	// Try alias lookup
 	if realName, exists := cr.aliases[name]; exists {
 		return cr.commands[realName]
 	}
-	
+
 	return nil
 }
 
@@ -194,21 +194,21 @@ func (cr *CommandRegistry) List() []*Command {
 func (cr *CommandRegistry) GetSuggestions(prefix string) []string {
 	prefix = strings.TrimPrefix(strings.ToLower(prefix), "/")
 	var suggestions []string
-	
+
 	// Check command names
 	for name := range cr.commands {
 		if strings.HasPrefix(strings.ToLower(name), prefix) {
 			suggestions = append(suggestions, "/"+name)
 		}
 	}
-	
+
 	// Check aliases
 	for alias := range cr.aliases {
 		if strings.HasPrefix(strings.ToLower(alias), prefix) {
 			suggestions = append(suggestions, "/"+alias)
 		}
 	}
-	
+
 	return suggestions
 }
 
@@ -260,22 +260,22 @@ func (m *Model) handleHelpCommand(args []string) tea.Cmd {
 				return statusMsg{fmt.Sprintf("Unknown command: %s", cmdName), 3 * time.Second}
 			}
 		}
-		
+
 		// Show detailed help for the command
-		helpText := fmt.Sprintf("Command: %s\nUsage: %s\nDescription: %s", 
+		helpText := fmt.Sprintf("Command: %s\nUsage: %s\nDescription: %s",
 			cmd.Name, cmd.Usage, cmd.Description)
-		
+
 		if len(cmd.Aliases) > 0 {
 			helpText += fmt.Sprintf("\nAliases: %s", strings.Join(cmd.Aliases, ", "))
 		}
-		
+
 		// TODO: Display help text in a modal or dedicated view
 		_ = helpText // Avoid unused variable warning
 		return func() tea.Msg {
 			return statusMsg{"Help displayed", 2 * time.Second}
 		}
 	}
-	
+
 	// Show general help
 	m.TransitionTo(StateHelp)
 	return nil
@@ -290,7 +290,7 @@ func (m *Model) handleModelCommand(args []string) tea.Cmd {
 	}
 
 	modelID := args[0]
-	
+
 	// TODO: Find model and switch to it
 	// For now, just show a status message
 	return func() tea.Msg {
@@ -309,7 +309,7 @@ func (m *Model) handleModelsCommand(args []string) tea.Cmd {
 // handleClearCommand clears chat history
 func (m *Model) handleClearCommand(args []string) tea.Cmd {
 	m.chatState.ClearMessages()
-	
+
 	// Clear log if storage is available
 	if m.storage != nil && m.storage.ChatLogger != nil {
 		go func() {
@@ -318,7 +318,7 @@ func (m *Model) handleClearCommand(args []string) tea.Cmd {
 			}
 		}()
 	}
-	
+
 	return func() tea.Msg {
 		return statusMsg{"Chat history cleared", 2 * time.Second}
 	}
@@ -335,11 +335,11 @@ func (m *Model) handleHistoryCommand(args []string) tea.Cmd {
 // handleExportCommand exports chat session
 func (m *Model) handleExportCommand(args []string) tea.Cmd {
 	format := "json"
-	
+
 	if len(args) > 0 {
 		format = args[0]
 	}
-	
+
 	// TODO: Implement export functionality
 	return func() tea.Msg {
 		return statusMsg{fmt.Sprintf("Export not implemented (format: %s)", format), 3 * time.Second}
@@ -352,13 +352,13 @@ func (m *Model) handleSettingsCommand(args []string) tea.Cmd {
 		// Set specific setting
 		option := args[0]
 		value := args[1]
-		
+
 		// TODO: Handle setting updates
 		return func() tea.Msg {
 			return statusMsg{fmt.Sprintf("Setting %s = %s", option, value), 2 * time.Second}
 		}
 	}
-	
+
 	m.TransitionTo(StateSettings)
 	return nil
 }
@@ -368,7 +368,7 @@ func (m *Model) handleKeysCommand(args []string) tea.Cmd {
 	if len(args) == 0 {
 		// Show current key status
 		status := "API Key Status:\n"
-		
+
 		providers := []string{"anthropic", "openai", "openrouter"}
 		for _, provider := range providers {
 			hasKey := false
@@ -379,29 +379,29 @@ func (m *Model) handleKeysCommand(args []string) tea.Cmd {
 					hasKey = false
 				}
 			}
-			
+
 			statusIcon := "❌"
 			if hasKey {
 				statusIcon = "✅"
 			}
 			status += fmt.Sprintf("%s %s\n", statusIcon, provider)
 		}
-		
+
 		// TODO: Display in a proper dialog
 		return func() tea.Msg {
 			return statusMsg{"API key status displayed", 2 * time.Second}
 		}
 	}
-	
+
 	if len(args) >= 2 {
 		provider := args[0]
-		
+
 		// TODO: Set API key
 		return func() tea.Msg {
 			return statusMsg{fmt.Sprintf("API key set for %s", provider), 2 * time.Second}
 		}
 	}
-	
+
 	return func() tea.Msg {
 		return statusMsg{"Usage: /keys [provider] [key]", 3 * time.Second}
 	}
@@ -423,11 +423,11 @@ func (m *Model) handleEditCommand(args []string) tea.Cmd {
 			return statusMsg{"No message to edit", 2 * time.Second}
 		}
 	}
-	
+
 	// TODO: Implement edit functionality
 	// For now, just set the last message content as current input
 	m.setCurrentInput(lastUserMsg.Content)
-	
+
 	return func() tea.Msg {
 		return statusMsg{"Message loaded for editing", 2 * time.Second}
 	}
@@ -441,7 +441,7 @@ func (m *Model) handleRetryCommand(args []string) tea.Cmd {
 			return statusMsg{"No message to retry", 2 * time.Second}
 		}
 	}
-	
+
 	// Remove the last assistant response if it exists
 	if len(m.chatState.Messages) > 0 {
 		lastMsg := m.chatState.Messages[len(m.chatState.Messages)-1]
@@ -449,7 +449,7 @@ func (m *Model) handleRetryCommand(args []string) tea.Cmd {
 			m.chatState.Messages = m.chatState.Messages[:len(m.chatState.Messages)-1]
 		}
 	}
-	
+
 	// Resend the last user message
 	return m.sendChatMessage(lastUserMsg.Content)
 }
@@ -461,9 +461,9 @@ func (m *Model) handleSearchCommand(args []string) tea.Cmd {
 			return statusMsg{"Usage: /search <query>", 2 * time.Second}
 		}
 	}
-	
+
 	query := strings.Join(args, " ")
-	
+
 	// TODO: Implement search functionality
 	return func() tea.Msg {
 		return statusMsg{fmt.Sprintf("Search not implemented (query: %s)", query), 3 * time.Second}
@@ -478,12 +478,12 @@ func (m *Model) handleQuitCommand(args []string) tea.Cmd {
 // handleDebugCommand toggles debug information
 func (m *Model) handleDebugCommand(args []string) tea.Cmd {
 	m.showDebugInfo = !m.showDebugInfo
-	
+
 	status := "off"
 	if m.showDebugInfo {
 		status = "on"
 	}
-	
+
 	return func() tea.Msg {
 		return statusMsg{fmt.Sprintf("Debug info %s", status), 2 * time.Second}
 	}
@@ -505,12 +505,12 @@ func (m *Model) handleWebSearchCommand(args []string) tea.Cmd {
 	} else {
 		m.webSearchEnabled = !m.webSearchEnabled
 	}
-	
+
 	status := "disabled"
 	if m.webSearchEnabled {
 		status = "enabled"
 	}
-	
+
 	return func() tea.Msg {
 		return statusMsg{fmt.Sprintf("Web search %s", status), 2 * time.Second}
 	}
@@ -527,14 +527,14 @@ func (m *Model) parseModelID(modelID string) (*api.Model, error) {
 		}
 		return nil, fmt.Errorf("model index out of range: %d", index)
 	}
-	
+
 	// Check if it's a model ID or name
 	for _, model := range m.modelsState.AvailableModels {
 		if model.ID == modelID || strings.EqualFold(model.Name, modelID) {
 			return &model, nil
 		}
 	}
-	
+
 	return nil, fmt.Errorf("model not found: %s", modelID)
 }
 
@@ -587,12 +587,12 @@ func (m *Model) IsValidCommand(input string) bool {
 	if !strings.HasPrefix(input, "/") {
 		return false
 	}
-	
+
 	parts := strings.Fields(input)
 	if len(parts) == 0 {
 		return false
 	}
-	
+
 	registry := NewCommandRegistry()
 	cmd := registry.Get(parts[0])
 	return cmd != nil

@@ -8,7 +8,7 @@ import (
 
 func setupTestChatLogger(t *testing.T) (*ChatLogger, string) {
 	tempDir := t.TempDir()
-	
+
 	// Mock home directory
 	oldHome := os.Getenv("HOME")
 	os.Setenv("HOME", tempDir)

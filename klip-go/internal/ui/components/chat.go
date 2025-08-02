@@ -46,10 +46,10 @@ type ChatView struct {
 	height        int
 	showTimestamp bool
 	autoScroll    bool
-	
+
 	// Enhanced features
-	selectedMessage   int
-	showLineNumbers   bool
+	selectedMessage  int
+	showLineNumbers  bool
 	wordWrap         bool
 	maxLineLength    int
 	theme            string
@@ -63,7 +63,7 @@ type ChatView struct {
 func NewChatView(width, height int) *ChatView {
 	vp := viewport.New(width, height-2) // Leave space for borders
 	vp.Style = ChatViewportStyle
-	
+
 	return &ChatView{
 		viewport:      vp,
 		messages:      make([]api.Message, 0),
@@ -71,16 +71,16 @@ func NewChatView(width, height int) *ChatView {
 		height:        height,
 		showTimestamp: false,
 		autoScroll:    true,
-		
+
 		// Enhanced features
 		selectedMessage:  -1,
 		showLineNumbers:  false,
-		wordWrap:        true,
-		maxLineLength:   80,
-		theme:           "charm",
+		wordWrap:         true,
+		maxLineLength:    80,
+		theme:            "charm",
 		messageReactions: make(map[int][]string),
-		exportFormats:   []string{"markdown", "text", "json", "html"},
-		contextMenu:     &ContextMenu{},
+		exportFormats:    []string{"markdown", "text", "json", "html"},
+		contextMenu:      &ContextMenu{},
 	}
 }
 
@@ -92,7 +92,7 @@ func (cv *ChatView) Init() tea.Cmd {
 // Update handles chat view updates
 func (cv *ChatView) Update(msg tea.Msg) (*ChatView, tea.Cmd) {
 	var cmd tea.Cmd
-	
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		cv.width = msg.Width
@@ -100,7 +100,7 @@ func (cv *ChatView) Update(msg tea.Msg) (*ChatView, tea.Cmd) {
 		cv.viewport.Width = msg.Width
 		cv.viewport.Height = msg.Height - 2
 		cv.updateContent()
-		
+
 	case ChatViewMsg:
 		switch msg.Type {
 		case "add_message":
@@ -144,7 +144,7 @@ func (cv *ChatView) Update(msg tea.Msg) (*ChatView, tea.Cmd) {
 				return cv, cv.exportMessage(messageIdx, format)
 			}
 		}
-		
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down":
@@ -213,7 +213,7 @@ func (cv *ChatView) Update(msg tea.Msg) (*ChatView, tea.Cmd) {
 	default:
 		cv.viewport, cmd = cv.viewport.Update(msg)
 	}
-	
+
 	return cv, cmd
 }
 
@@ -293,7 +293,7 @@ func (cv *ChatView) GetMessages() []api.Message {
 // updateContent updates the viewport content
 func (cv *ChatView) updateContent() {
 	var content strings.Builder
-	
+
 	for i, msg := range cv.messages {
 		rendered := cv.renderMessage(msg, i == len(cv.messages)-1)
 		content.WriteString(rendered)
@@ -301,7 +301,7 @@ func (cv *ChatView) updateContent() {
 			content.WriteString("\n")
 		}
 	}
-	
+
 	// Add streaming content if active
 	if cv.isStreaming && cv.streamBuffer != "" {
 		if len(cv.messages) > 0 {
@@ -315,34 +315,34 @@ func (cv *ChatView) updateContent() {
 		content.WriteString(cv.renderMessage(streamMsg, true))
 		content.WriteString(StreamingIndicatorStyle.Render(" ▋"))
 	}
-	
+
 	cv.viewport.SetContent(content.String())
 }
 
 // renderMessage renders a single message with appropriate styling
 func (cv *ChatView) renderMessage(msg api.Message, isLast bool) string {
 	var content strings.Builder
-	
+
 	// Message header
 	header := cv.renderMessageHeader(msg)
 	content.WriteString(header)
 	content.WriteString("\n")
-	
+
 	// Message content with syntax highlighting
 	renderedContent := cv.renderMessageContent(msg.Content, msg.Role)
 	content.WriteString(renderedContent)
-	
+
 	if !isLast {
 		content.WriteString("\n")
 	}
-	
+
 	return content.String()
 }
 
 // renderMessageHeader renders the message header with role and timestamp
 func (cv *ChatView) renderMessageHeader(msg api.Message) string {
 	var header strings.Builder
-	
+
 	// Role indicator
 	switch msg.Role {
 	case "user":
@@ -354,21 +354,21 @@ func (cv *ChatView) renderMessageHeader(msg api.Message) string {
 	default:
 		header.WriteString(DefaultMessageHeaderStyle.Render(strings.Title(msg.Role)))
 	}
-	
+
 	// Timestamp if enabled
 	if cv.showTimestamp {
 		timestamp := msg.Timestamp.Format("15:04:05")
 		header.WriteString(" ")
 		header.WriteString(TimestampStyle.Render(timestamp))
 	}
-	
+
 	return header.String()
 }
 
 // renderMessageContent renders message content with syntax highlighting
 func (cv *ChatView) renderMessageContent(content, role string) string {
 	var result strings.Builder
-	
+
 	// Apply role-specific styling
 	var baseStyle lipgloss.Style
 	switch role {
@@ -381,12 +381,12 @@ func (cv *ChatView) renderMessageContent(content, role string) string {
 	default:
 		baseStyle = DefaultMessageStyle
 	}
-	
+
 	// Split content into lines for processing
 	lines := strings.Split(content, "\n")
 	inCodeBlock := false
 	codeBlockLang := ""
-	
+
 	for i, line := range lines {
 		if cv.isCodeBlockDelimiter(line) {
 			if !inCodeBlock {
@@ -412,13 +412,13 @@ func (cv *ChatView) renderMessageContent(content, role string) string {
 			// Regular text
 			result.WriteString(baseStyle.Render(line))
 		}
-		
+
 		// Add newline if not last line
 		if i < len(lines)-1 {
 			result.WriteString("\n")
 		}
 	}
-	
+
 	return result.String()
 }
 
@@ -477,7 +477,7 @@ func (cv *ChatView) highlightGo(code string) string {
 	keywords := []string{"package", "import", "func", "var", "const", "type", "struct", "interface",
 		"if", "else", "for", "range", "switch", "case", "default", "return", "break", "continue",
 		"go", "defer", "select", "chan", "map", "make", "new", "len", "cap", "append", "copy"}
-	
+
 	result := code
 	for _, keyword := range keywords {
 		re := regexp.MustCompile(`\b` + keyword + `\b`)
@@ -485,19 +485,19 @@ func (cv *ChatView) highlightGo(code string) string {
 			return KeywordStyle.Render(match)
 		})
 	}
-	
+
 	// String literals
 	stringRe := regexp.MustCompile(`"[^"]*"`)
 	result = stringRe.ReplaceAllStringFunc(result, func(match string) string {
 		return StringStyle.Render(match)
 	})
-	
+
 	// Comments
 	commentRe := regexp.MustCompile(`//.*$`)
 	result = commentRe.ReplaceAllStringFunc(result, func(match string) string {
 		return CommentStyle.Render(match)
 	})
-	
+
 	return result
 }
 
@@ -505,7 +505,7 @@ func (cv *ChatView) highlightPython(code string) string {
 	keywords := []string{"def", "class", "import", "from", "if", "elif", "else", "for", "while",
 		"try", "except", "finally", "with", "as", "return", "yield", "break", "continue",
 		"pass", "lambda", "and", "or", "not", "is", "in"}
-	
+
 	result := code
 	for _, keyword := range keywords {
 		re := regexp.MustCompile(`\b` + keyword + `\b`)
@@ -513,19 +513,19 @@ func (cv *ChatView) highlightPython(code string) string {
 			return KeywordStyle.Render(match)
 		})
 	}
-	
+
 	// String literals
 	stringRe := regexp.MustCompile(`(['"])[^'"]*\1`)
 	result = stringRe.ReplaceAllStringFunc(result, func(match string) string {
 		return StringStyle.Render(match)
 	})
-	
+
 	// Comments
 	commentRe := regexp.MustCompile(`#.*$`)
 	result = commentRe.ReplaceAllStringFunc(result, func(match string) string {
 		return CommentStyle.Render(match)
 	})
-	
+
 	return result
 }
 
@@ -533,7 +533,7 @@ func (cv *ChatView) highlightJavaScript(code string) string {
 	keywords := []string{"function", "var", "let", "const", "if", "else", "for", "while", "do",
 		"switch", "case", "default", "break", "continue", "return", "try", "catch", "finally",
 		"throw", "new", "this", "class", "extends", "import", "export", "from"}
-	
+
 	result := code
 	for _, keyword := range keywords {
 		re := regexp.MustCompile(`\b` + keyword + `\b`)
@@ -541,19 +541,19 @@ func (cv *ChatView) highlightJavaScript(code string) string {
 			return KeywordStyle.Render(match)
 		})
 	}
-	
+
 	// String literals
 	stringRe := regexp.MustCompile(`(['"][^'"]*['"])`)
 	result = stringRe.ReplaceAllStringFunc(result, func(match string) string {
 		return StringStyle.Render(match)
 	})
-	
+
 	// Comments
 	commentRe := regexp.MustCompile(`//.*$`)
 	result = commentRe.ReplaceAllStringFunc(result, func(match string) string {
 		return CommentStyle.Render(match)
 	})
-	
+
 	return result
 }
 
@@ -563,19 +563,19 @@ func (cv *ChatView) highlightJSON(code string) string {
 	result := stringRe.ReplaceAllStringFunc(code, func(match string) string {
 		return StringStyle.Render(match)
 	})
-	
+
 	// JSON numbers
 	numberRe := regexp.MustCompile(`\b\d+\.?\d*\b`)
 	result = numberRe.ReplaceAllStringFunc(result, func(match string) string {
 		return NumberStyle.Render(match)
 	})
-	
+
 	// JSON booleans and null
 	boolRe := regexp.MustCompile(`\b(true|false|null)\b`)
 	result = boolRe.ReplaceAllStringFunc(result, func(match string) string {
 		return BooleanStyle.Render(match)
 	})
-	
+
 	return result
 }
 
@@ -583,7 +583,7 @@ func (cv *ChatView) highlightBash(code string) string {
 	// Bash commands and keywords
 	keywords := []string{"if", "then", "else", "elif", "fi", "for", "do", "done", "while",
 		"case", "esac", "function", "echo", "cd", "ls", "grep", "awk", "sed", "cat"}
-	
+
 	result := code
 	for _, keyword := range keywords {
 		re := regexp.MustCompile(`\b` + keyword + `\b`)
@@ -591,19 +591,19 @@ func (cv *ChatView) highlightBash(code string) string {
 			return KeywordStyle.Render(match)
 		})
 	}
-	
+
 	// String literals
 	stringRe := regexp.MustCompile(`(['"])[^'"]*\1`)
 	result = stringRe.ReplaceAllStringFunc(result, func(match string) string {
 		return StringStyle.Render(match)
 	})
-	
+
 	// Comments
 	commentRe := regexp.MustCompile(`#.*$`)
 	result = commentRe.ReplaceAllStringFunc(result, func(match string) string {
 		return CommentStyle.Render(match)
 	})
-	
+
 	return result
 }
 
@@ -611,119 +611,119 @@ func (cv *ChatView) highlightBash(code string) string {
 var (
 	// Chat container styles
 	ChatContainerStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#7C3AED")).
-		Padding(1)
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#7C3AED")).
+				Padding(1)
 
 	ChatViewportStyle = lipgloss.NewStyle().
-		PaddingLeft(1).
-		PaddingRight(1)
+				PaddingLeft(1).
+				PaddingRight(1)
 
 	// Message header styles
 	UserMessageHeaderStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#3B82F6")).
-		Bold(true).
-		PaddingLeft(1)
+				Foreground(lipgloss.Color("#3B82F6")).
+				Bold(true).
+				PaddingLeft(1)
 
 	AssistantMessageHeaderStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true).
-		PaddingLeft(1)
+					Foreground(lipgloss.Color("#7C3AED")).
+					Bold(true).
+					PaddingLeft(1)
 
 	SystemMessageHeaderStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		Bold(true).
-		PaddingLeft(1)
+					Foreground(lipgloss.Color("#6B7280")).
+					Bold(true).
+					PaddingLeft(1)
 
 	DefaultMessageHeaderStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#374151")).
-		Bold(true).
-		PaddingLeft(1)
+					Foreground(lipgloss.Color("#374151")).
+					Bold(true).
+					PaddingLeft(1)
 
 	TimestampStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#9CA3AF")).
-		Faint(true)
+			Foreground(lipgloss.Color("#9CA3AF")).
+			Faint(true)
 
 	// Message content styles
 	UserMessageStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#1F2937")).
-		PaddingLeft(2).
-		PaddingRight(1)
+				Foreground(lipgloss.Color("#1F2937")).
+				PaddingLeft(2).
+				PaddingRight(1)
 
 	AssistantMessageStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#1F2937")).
-		PaddingLeft(2).
-		PaddingRight(1)
+				Foreground(lipgloss.Color("#1F2937")).
+				PaddingLeft(2).
+				PaddingRight(1)
 
 	SystemMessageStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		Italic(true).
-		PaddingLeft(2).
-		PaddingRight(1)
+				Foreground(lipgloss.Color("#6B7280")).
+				Italic(true).
+				PaddingLeft(2).
+				PaddingRight(1)
 
 	DefaultMessageStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#374151")).
-		PaddingLeft(2).
-		PaddingRight(1)
+				Foreground(lipgloss.Color("#374151")).
+				PaddingLeft(2).
+				PaddingRight(1)
 
 	// Code highlighting styles
 	CodeBlockStyle = lipgloss.NewStyle().
-		Background(lipgloss.Color("#F3F4F6")).
-		Foreground(lipgloss.Color("#1F2937")).
-		Padding(0, 1).
-		MarginLeft(2)
+			Background(lipgloss.Color("#F3F4F6")).
+			Foreground(lipgloss.Color("#1F2937")).
+			Padding(0, 1).
+			MarginLeft(2)
 
 	CodeBlockDelimiterStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		MarginLeft(2)
+				Foreground(lipgloss.Color("#6B7280")).
+				MarginLeft(2)
 
 	InlineCodeStyle = lipgloss.NewStyle().
-		Background(lipgloss.Color("#F3F4F6")).
-		Foreground(lipgloss.Color("#DC2626")).
-		Padding(0, 1)
+			Background(lipgloss.Color("#F3F4F6")).
+			Foreground(lipgloss.Color("#DC2626")).
+			Padding(0, 1)
 
 	// Syntax highlighting styles
 	KeywordStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true)
+			Foreground(lipgloss.Color("#7C3AED")).
+			Bold(true)
 
 	StringStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#059669"))
+			Foreground(lipgloss.Color("#059669"))
 
 	CommentStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
-		Italic(true)
+			Foreground(lipgloss.Color("#6B7280")).
+			Italic(true)
 
 	NumberStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#DC2626"))
+			Foreground(lipgloss.Color("#DC2626"))
 
 	BooleanStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C2D12")).
-		Bold(true)
+			Foreground(lipgloss.Color("#7C2D12")).
+			Bold(true)
 
 	// Streaming indicator
 	StreamingIndicatorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Blink(true)
+				Foreground(lipgloss.Color("#7C3AED")).
+				Blink(true)
 )
 
 // Helper functions for integration with app state
 func NewChatViewFromState(state *app.ChatState, width, height int) *ChatView {
 	cv := NewChatView(width, height)
-	
+
 	// Convert app messages to API messages
 	apiMessages := make([]api.Message, len(state.Messages))
 	for i, msg := range state.Messages {
 		apiMessages[i] = msg
 	}
-	
+
 	cv.SetMessages(apiMessages)
-	
+
 	if state.IsStreaming {
 		cv.StartStreaming()
 		cv.AddStreamChunk(state.StreamBuffer)
 	}
-	
+
 	return cv
 }
 
@@ -734,9 +734,9 @@ func (cv *ChatView) UpdateFromState(state *app.ChatState) {
 	for i, msg := range state.Messages {
 		apiMessages[i] = msg
 	}
-	
+
 	cv.SetMessages(apiMessages)
-	
+
 	if state.IsStreaming {
 		if !cv.isStreaming {
 			cv.StartStreaming()
@@ -816,7 +816,7 @@ func (cv *ChatView) navigateContextMenu(direction int) {
 	if !cv.contextMenu.visible {
 		return
 	}
-	
+
 	newSelected := cv.contextMenu.selected + direction
 	if newSelected < 0 {
 		newSelected = len(cv.contextMenu.items) - 1
@@ -831,11 +831,11 @@ func (cv *ChatView) executeContextAction() tea.Cmd {
 	if !cv.contextMenu.visible || cv.contextMenu.selected >= len(cv.contextMenu.items) {
 		return nil
 	}
-	
+
 	action := cv.contextMenu.items[cv.contextMenu.selected].Action
 	messageIdx := cv.contextMenu.messageIdx
 	cv.contextMenu.visible = false
-	
+
 	switch action {
 	case "copy":
 		return cv.copyMessage(messageIdx)
@@ -848,7 +848,7 @@ func (cv *ChatView) executeContextAction() tea.Cmd {
 	case "edit":
 		return cv.editMessage(messageIdx)
 	}
-	
+
 	return nil
 }
 
@@ -932,36 +932,36 @@ func (cv *ChatView) prevSearchResult() {
 var (
 	// Message selection styles
 	MessageSelectedStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Bold(true)
+				Foreground(lipgloss.Color("#7C3AED")).
+				Bold(true)
 
 	LineNumberStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#9CA3AF")).
-		Faint(true)
+			Foreground(lipgloss.Color("#9CA3AF")).
+			Faint(true)
 
 	ReactionsStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#F59E0B")).
-		PaddingLeft(2)
+			Foreground(lipgloss.Color("#F59E0B")).
+			PaddingLeft(2)
 
 	// Context menu styles
 	ContextMenuStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#7C3AED")).
-		Background(lipgloss.Color("#FFFFFF")).
-		Padding(1)
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#7C3AED")).
+				Background(lipgloss.Color("#FFFFFF")).
+				Padding(1)
 
 	ContextMenuItemStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#374151")).
-		PaddingLeft(1)
+				Foreground(lipgloss.Color("#374151")).
+				PaddingLeft(1)
 
 	ContextMenuSelectedStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
-		Background(lipgloss.Color("#F3F4F6")).
-		Bold(true).
-		PaddingLeft(1)
+					Foreground(lipgloss.Color("#7C3AED")).
+					Background(lipgloss.Color("#F3F4F6")).
+					Bold(true).
+					PaddingLeft(1)
 
 	// Search highlight style
 	SearchHighlightStyle = lipgloss.NewStyle().
-		Background(lipgloss.Color("#FEF3C7")).
-		Foreground(lipgloss.Color("#92400E"))
+				Background(lipgloss.Color("#FEF3C7")).
+				Foreground(lipgloss.Color("#92400E"))
 )

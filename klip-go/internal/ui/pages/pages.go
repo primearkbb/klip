@@ -24,7 +24,7 @@ const (
 // PageNames maps page types to their string names
 var PageNames = map[PageType]string{
 	PageChat:     "chat",
-	PageSettings: "settings", 
+	PageSettings: "settings",
 	PageModels:   "models",
 	PageHelp:     "help",
 }

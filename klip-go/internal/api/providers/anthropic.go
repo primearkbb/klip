@@ -38,13 +38,13 @@ func NewAnthropicProvider(apiKey string, httpClient *http.Client) (api.ProviderI
 
 // AnthropicRequest represents the request format for Anthropic API
 type AnthropicRequest struct {
-	Model     string                   `json:"model"`
-	MaxTokens int                      `json:"max_tokens"`
-	Messages  []AnthropicMessage       `json:"messages"`
-	System    string                   `json:"system,omitempty"`
-	Stream    bool                     `json:"stream,omitempty"`
-	Tools     []AnthropicTool          `json:"tools,omitempty"`
-	Metadata  *AnthropicMetadata       `json:"metadata,omitempty"`
+	Model     string             `json:"model"`
+	MaxTokens int                `json:"max_tokens"`
+	Messages  []AnthropicMessage `json:"messages"`
+	System    string             `json:"system,omitempty"`
+	Stream    bool               `json:"stream,omitempty"`
+	Tools     []AnthropicTool    `json:"tools,omitempty"`
+	Metadata  *AnthropicMetadata `json:"metadata,omitempty"`
 }
 
 // AnthropicMessage represents a message in Anthropic format
@@ -67,14 +67,14 @@ type AnthropicMetadata struct {
 
 // AnthropicResponse represents the response format from Anthropic API
 type AnthropicResponse struct {
-	ID           string                  `json:"id"`
-	Type         string                  `json:"type"`
-	Role         string                  `json:"role"`
-	Content      []AnthropicContent      `json:"content"`
-	Model        string                  `json:"model"`
-	StopReason   string                  `json:"stop_reason,omitempty"`
-	StopSequence string                  `json:"stop_sequence,omitempty"`
-	Usage        AnthropicUsage          `json:"usage"`
+	ID           string             `json:"id"`
+	Type         string             `json:"type"`
+	Role         string             `json:"role"`
+	Content      []AnthropicContent `json:"content"`
+	Model        string             `json:"model"`
+	StopReason   string             `json:"stop_reason,omitempty"`
+	StopSequence string             `json:"stop_sequence,omitempty"`
+	Usage        AnthropicUsage     `json:"usage"`
 }
 
 // AnthropicContent represents content in Anthropic response
@@ -91,11 +91,11 @@ type AnthropicUsage struct {
 
 // AnthropicStreamEvent represents a streaming event from Anthropic
 type AnthropicStreamEvent struct {
-	Type    string                     `json:"type"`
-	Message *AnthropicResponse         `json:"message,omitempty"`
-	Index   int                        `json:"index,omitempty"`
-	Delta   *AnthropicStreamDelta      `json:"delta,omitempty"`
-	Usage   *AnthropicUsage            `json:"usage,omitempty"`
+	Type    string                `json:"type"`
+	Message *AnthropicResponse    `json:"message,omitempty"`
+	Index   int                   `json:"index,omitempty"`
+	Delta   *AnthropicStreamDelta `json:"delta,omitempty"`
+	Usage   *AnthropicUsage       `json:"usage,omitempty"`
 }
 
 // AnthropicStreamDelta represents delta content in streaming
@@ -107,18 +107,18 @@ type AnthropicStreamDelta struct {
 // Chat sends a non-streaming chat request to Anthropic
 func (p *AnthropicProvider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error) {
 	anthropicReq := p.buildAnthropicRequest(req, false)
-	
+
 	requestBody, err := json.Marshal(anthropicReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
 	resp, err := api.MakeHTTPRequest(
-		ctx, 
-		p.httpClient, 
-		"POST", 
-		p.baseURL+"/messages", 
-		p.headers, 
+		ctx,
+		p.httpClient,
+		"POST",
+		p.baseURL+"/messages",
+		p.headers,
 		requestBody,
 	)
 	if err != nil {
@@ -148,7 +148,7 @@ func (p *AnthropicProvider) ChatStream(ctx context.Context, req *api.ChatRequest
 		defer close(errorChan)
 
 		anthropicReq := p.buildAnthropicRequest(req, true)
-		
+
 		requestBody, err := json.Marshal(anthropicReq)
 		if err != nil {
 			errorChan <- fmt.Errorf("failed to marshal request: %w", err)
@@ -156,11 +156,11 @@ func (p *AnthropicProvider) ChatStream(ctx context.Context, req *api.ChatRequest
 		}
 
 		resp, err := api.MakeHTTPRequest(
-			ctx, 
-			p.httpClient, 
-			"POST", 
-			p.baseURL+"/messages", 
-			p.headers, 
+			ctx,
+			p.httpClient,
+			"POST",
+			p.baseURL+"/messages",
+			p.headers,
 			requestBody,
 		)
 		if err != nil {

@@ -33,38 +33,38 @@ func NewOpenRouterProvider(apiKey string, httpClient *http.Client) (api.Provider
 		httpClient: httpClient,
 		baseURL:    "https://openrouter.ai/api/v1",
 		headers: map[string]string{
-			"Content-Type":   "application/json",
-			"Authorization":  "Bearer " + apiKey,
-			"HTTP-Referer":   "https://github.com/your-username/klip",
-			"X-Title":        "Klip Chat",
+			"Content-Type":  "application/json",
+			"Authorization": "Bearer " + apiKey,
+			"HTTP-Referer":  "https://github.com/your-username/klip",
+			"X-Title":       "Klip Chat",
 		},
 	}, nil
 }
 
 // OpenRouterRequest represents the request format for OpenRouter API (OpenAI-compatible)
 type OpenRouterRequest struct {
-	Model       string                `json:"model"`
-	Messages    []OpenRouterMessage   `json:"messages"`
-	MaxTokens   int                   `json:"max_tokens,omitempty"`
-	Temperature float64               `json:"temperature,omitempty"`
-	Stream      bool                  `json:"stream,omitempty"`
-	Tools       []OpenRouterTool      `json:"tools,omitempty"`
-	ToolChoice  interface{}           `json:"tool_choice,omitempty"`
-	Transforms  []string              `json:"transforms,omitempty"`
+	Model       string              `json:"model"`
+	Messages    []OpenRouterMessage `json:"messages"`
+	MaxTokens   int                 `json:"max_tokens,omitempty"`
+	Temperature float64             `json:"temperature,omitempty"`
+	Stream      bool                `json:"stream,omitempty"`
+	Tools       []OpenRouterTool    `json:"tools,omitempty"`
+	ToolChoice  interface{}         `json:"tool_choice,omitempty"`
+	Transforms  []string            `json:"transforms,omitempty"`
 }
 
 // OpenRouterMessage represents a message in OpenRouter format (OpenAI-compatible)
 type OpenRouterMessage struct {
-	Role      string                     `json:"role"`
-	Content   string                     `json:"content,omitempty"`
-	Name      string                     `json:"name,omitempty"`
-	ToolCalls []OpenRouterToolCall       `json:"tool_calls,omitempty"`
+	Role      string               `json:"role"`
+	Content   string               `json:"content,omitempty"`
+	Name      string               `json:"name,omitempty"`
+	ToolCalls []OpenRouterToolCall `json:"tool_calls,omitempty"`
 }
 
 // OpenRouterTool represents a tool definition for OpenRouter
 type OpenRouterTool struct {
-	Type     string                 `json:"type"`
-	Function OpenRouterFunction     `json:"function"`
+	Type     string             `json:"type"`
+	Function OpenRouterFunction `json:"function"`
 }
 
 // OpenRouterFunction represents a function definition
@@ -76,9 +76,9 @@ type OpenRouterFunction struct {
 
 // OpenRouterToolCall represents a tool call in a message
 type OpenRouterToolCall struct {
-	ID       string                   `json:"id"`
-	Type     string                   `json:"type"`
-	Function OpenRouterFunctionCall   `json:"function"`
+	ID       string                 `json:"id"`
+	Type     string                 `json:"type"`
+	Function OpenRouterFunctionCall `json:"function"`
 }
 
 // OpenRouterFunctionCall represents a function call
@@ -89,20 +89,20 @@ type OpenRouterFunctionCall struct {
 
 // OpenRouterResponse represents the response format from OpenRouter API
 type OpenRouterResponse struct {
-	ID      string                `json:"id"`
-	Object  string                `json:"object"`
-	Created int64                 `json:"created"`
-	Model   string                `json:"model"`
-	Choices []OpenRouterChoice    `json:"choices"`
-	Usage   OpenRouterUsage       `json:"usage"`
+	ID      string             `json:"id"`
+	Object  string             `json:"object"`
+	Created int64              `json:"created"`
+	Model   string             `json:"model"`
+	Choices []OpenRouterChoice `json:"choices"`
+	Usage   OpenRouterUsage    `json:"usage"`
 }
 
 // OpenRouterChoice represents a choice in OpenRouter response
 type OpenRouterChoice struct {
-	Index        int                  `json:"index"`
-	Message      OpenRouterMessage    `json:"message"`
-	Delta        *OpenRouterMessage   `json:"delta,omitempty"`
-	FinishReason string               `json:"finish_reason"`
+	Index        int                `json:"index"`
+	Message      OpenRouterMessage  `json:"message"`
+	Delta        *OpenRouterMessage `json:"delta,omitempty"`
+	FinishReason string             `json:"finish_reason"`
 }
 
 // OpenRouterUsage represents usage information from OpenRouter
@@ -114,23 +114,23 @@ type OpenRouterUsage struct {
 
 // OpenRouterStreamEvent represents a streaming event from OpenRouter
 type OpenRouterStreamEvent struct {
-	ID      string                `json:"id"`
-	Object  string                `json:"object"`
-	Created int64                 `json:"created"`
-	Model   string                `json:"model"`
-	Choices []OpenRouterChoice    `json:"choices"`
-	Usage   *OpenRouterUsage      `json:"usage,omitempty"`
+	ID      string             `json:"id"`
+	Object  string             `json:"object"`
+	Created int64              `json:"created"`
+	Model   string             `json:"model"`
+	Choices []OpenRouterChoice `json:"choices"`
+	Usage   *OpenRouterUsage   `json:"usage,omitempty"`
 }
 
 // OpenRouterModel represents a model from OpenRouter's model list
 type OpenRouterModel struct {
-	ID          string                    `json:"id"`
-	Name        string                    `json:"name"`
-	Description string                    `json:"description,omitempty"`
-	Context     int                       `json:"context_length"`
-	Architecture OpenRouterArchitecture   `json:"architecture"`
-	Pricing     OpenRouterPricing         `json:"pricing"`
-	TopProvider OpenRouterTopProvider     `json:"top_provider"`
+	ID           string                 `json:"id"`
+	Name         string                 `json:"name"`
+	Description  string                 `json:"description,omitempty"`
+	Context      int                    `json:"context_length"`
+	Architecture OpenRouterArchitecture `json:"architecture"`
+	Pricing      OpenRouterPricing      `json:"pricing"`
+	TopProvider  OpenRouterTopProvider  `json:"top_provider"`
 }
 
 // OpenRouterArchitecture represents model architecture info
@@ -159,18 +159,18 @@ type OpenRouterModelsResponse struct {
 // Chat sends a non-streaming chat request to OpenRouter
 func (p *OpenRouterProvider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error) {
 	openrouterReq := p.buildOpenRouterRequest(req, false)
-	
+
 	requestBody, err := json.Marshal(openrouterReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
 	resp, err := api.MakeHTTPRequest(
-		ctx, 
-		p.httpClient, 
-		"POST", 
-		p.baseURL+"/chat/completions", 
-		p.headers, 
+		ctx,
+		p.httpClient,
+		"POST",
+		p.baseURL+"/chat/completions",
+		p.headers,
 		requestBody,
 	)
 	if err != nil {
@@ -200,7 +200,7 @@ func (p *OpenRouterProvider) ChatStream(ctx context.Context, req *api.ChatReques
 		defer close(errorChan)
 
 		openrouterReq := p.buildOpenRouterRequest(req, true)
-		
+
 		requestBody, err := json.Marshal(openrouterReq)
 		if err != nil {
 			errorChan <- fmt.Errorf("failed to marshal request: %w", err)
@@ -208,11 +208,11 @@ func (p *OpenRouterProvider) ChatStream(ctx context.Context, req *api.ChatReques
 		}
 
 		resp, err := api.MakeHTTPRequest(
-			ctx, 
-			p.httpClient, 
-			"POST", 
-			p.baseURL+"/chat/completions", 
-			p.headers, 
+			ctx,
+			p.httpClient,
+			"POST",
+			p.baseURL+"/chat/completions",
+			p.headers,
 			requestBody,
 		)
 		if err != nil {

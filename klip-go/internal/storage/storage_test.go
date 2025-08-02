@@ -7,7 +7,7 @@ import (
 
 func setupTestStorage(t *testing.T) (*Storage, string) {
 	tempDir := t.TempDir()
-	
+
 	// Mock home directory
 	oldHome := os.Getenv("HOME")
 	os.Setenv("HOME", tempDir)
@@ -72,7 +72,7 @@ func TestStorage_KeyStoreIntegration(t *testing.T) {
 
 	// Test saving and retrieving API keys
 	testKey := "test-api-key-12345"
-	
+
 	err := storage.KeyStore.SaveKey("anthropic", testKey)
 	if err != nil {
 		t.Fatalf("Failed to save API key: %v", err)
@@ -333,17 +333,17 @@ func TestStorage_CrossComponentIntegration(t *testing.T) {
 
 	// Log analytics for the interaction
 	requestMetrics := RequestMetrics{
-		StartTime:                 storage.ChatLogger.GetCurrentSession().Timestamp,
-		ModelID:                   "claude-3-5-sonnet-20241022",
-		ModelName:                 "Claude 3.5 Sonnet",
-		Provider:                  "anthropic",
-		MessageCount:              1,
-		UserMessageLength:         25,
-		TotalConversationLength:   25,
-		HasSystemMessage:          false,
-		Temperature:               0.7,
-		MaxTokens:                 4096,
-		IsStream:                  true,
+		StartTime:               storage.ChatLogger.GetCurrentSession().Timestamp,
+		ModelID:                 "claude-3-5-sonnet-20241022",
+		ModelName:               "Claude 3.5 Sonnet",
+		Provider:                "anthropic",
+		MessageCount:            1,
+		UserMessageLength:       25,
+		TotalConversationLength: 25,
+		HasSystemMessage:        false,
+		Temperature:             0.7,
+		MaxTokens:               4096,
+		IsStream:                true,
 	}
 
 	err = storage.AnalyticsLogger.LogRequest(requestMetrics)

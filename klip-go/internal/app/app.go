@@ -17,23 +17,23 @@ import (
 type Model struct {
 	// Core application state
 	stateManager *StateManager
-	
+
 	// Window dimensions and layout
 	width  int
 	height int
 	ready  bool
-	
+
 	// Dependencies
 	storage    *storage.Storage
 	apiClient  api.ProviderInterface
 	logger     *log.Logger
 	ctx        context.Context
 	cancelFunc context.CancelFunc
-	
+
 	// Current model and configuration
 	currentModel api.Model
 	config       *storage.Config
-	
+
 	// State-specific data
 	loadingState  *LoadingState
 	chatState     *ChatState
@@ -42,20 +42,20 @@ type Model struct {
 	historyState  *HistoryState
 	helpState     *HelpState
 	errorState    *ErrorState
-	
+
 	// Input handling
-	inputBuffer   string
-	cursorPos     int
-	inputHistory  []string
-	historyIndex  int
-	
+	inputBuffer  string
+	cursorPos    int
+	inputHistory []string
+	historyIndex int
+
 	// UI state
-	statusMessage   string
-	statusTimeout   time.Time
-	showDebugInfo   bool
-	animationFrame  int
-	lastUpdate      time.Time
-	
+	statusMessage  string
+	statusTimeout  time.Time
+	showDebugInfo  bool
+	animationFrame int
+	lastUpdate     time.Time
+
 	// Feature flags
 	webSearchEnabled bool
 	analyticsEnabled bool
@@ -64,11 +64,11 @@ type Model struct {
 // New creates a new application model
 func New() *Model {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Initialize logger
 	logger := log.New(os.Stderr)
 	logger.SetLevel(log.InfoLevel)
-	
+
 	return &Model{
 		stateManager:     NewStateManager(),
 		ctx:              ctx,
@@ -111,10 +111,10 @@ func (m *Model) TransitionTo(newState AppState) bool {
 // onStateTransition handles state transition logic
 func (m *Model) onStateTransition(from, to AppState) {
 	m.logger.Debug("State transition", "from", from.String(), "to", to.String())
-	
+
 	// Clear status message on state change
 	m.clearStatusMessage()
-	
+
 	// State-specific transition logic
 	switch to {
 	case StateChat:
@@ -147,7 +147,7 @@ func (m *Model) cleanup() {
 			m.logger.Error("Error during storage shutdown", "error", err)
 		}
 	}
-	
+
 	if m.cancelFunc != nil {
 		m.cancelFunc()
 	}
@@ -175,20 +175,20 @@ func (m *Model) addToInputHistory(input string) {
 	if input == "" {
 		return
 	}
-	
+
 	// Avoid duplicates
 	if len(m.inputHistory) > 0 && m.inputHistory[len(m.inputHistory)-1] == input {
 		return
 	}
-	
+
 	m.inputHistory = append(m.inputHistory, input)
-	
+
 	// Limit history size
 	const maxHistory = 100
 	if len(m.inputHistory) > maxHistory {
 		m.inputHistory = m.inputHistory[len(m.inputHistory)-maxHistory:]
 	}
-	
+
 	m.historyIndex = -1
 }
 
@@ -197,23 +197,23 @@ func (m *Model) navigateInputHistory(direction int) {
 	if len(m.inputHistory) == 0 {
 		return
 	}
-	
+
 	newIndex := m.historyIndex + direction
-	
+
 	if newIndex < -1 {
 		newIndex = -1
 	} else if newIndex >= len(m.inputHistory) {
 		newIndex = len(m.inputHistory) - 1
 	}
-	
+
 	m.historyIndex = newIndex
-	
+
 	if m.historyIndex == -1 {
 		m.inputBuffer = ""
 	} else {
 		m.inputBuffer = m.inputHistory[len(m.inputHistory)-1-m.historyIndex]
 	}
-	
+
 	m.cursorPos = len(m.inputBuffer)
 }
 
@@ -234,7 +234,7 @@ func (m *Model) insertAtCursor(text string) {
 	if m.cursorPos > len(m.inputBuffer) {
 		m.cursorPos = len(m.inputBuffer)
 	}
-	
+
 	before := m.inputBuffer[:m.cursorPos]
 	after := m.inputBuffer[m.cursorPos:]
 	m.inputBuffer = before + text + after
@@ -278,11 +278,11 @@ func (m *Model) getInputMode() InputMode {
 	if m.GetCurrentState() != StateChat {
 		return InputModeNormal
 	}
-	
+
 	if m.isCommand() {
 		return InputModeCommand
 	}
-	
+
 	return m.chatState.InputMode
 }
 
@@ -297,7 +297,7 @@ func (m *Model) recoverFromError() bool {
 	if m.errorState == nil || !m.errorState.Recoverable {
 		return false
 	}
-	
+
 	// Try to recover
 	if m.errorState.RetryAction != nil {
 		if err := m.errorState.RetryAction(); err != nil {
@@ -305,7 +305,7 @@ func (m *Model) recoverFromError() bool {
 			return false
 		}
 	}
-	
+
 	// Return to previous state
 	previousState := m.errorState.PreviousState
 	m.errorState = nil
