@@ -160,7 +160,7 @@ func (ks *KeyStore) GetKeys() (*ApiKeys, error) {
 		// If decryption fails, the key file might be corrupted or using an old key
 		// Log the error and return empty keys instead of failing
 		ks.logger.Warn("Failed to decrypt existing keys, starting fresh", "error", err)
-		
+
 		// Backup the corrupted file and start fresh
 		backupPath := ks.keyFile + ".corrupted.backup"
 		if backupErr := os.Rename(ks.keyFile, backupPath); backupErr != nil {
@@ -168,7 +168,7 @@ func (ks *KeyStore) GetKeys() (*ApiKeys, error) {
 		} else {
 			ks.logger.Info("Backed up corrupted key file", "backup", backupPath)
 		}
-		
+
 		return &ApiKeys{}, nil
 	}
 

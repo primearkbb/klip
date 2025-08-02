@@ -199,19 +199,19 @@ func (m *Model) renderOnboardingView() string {
 func (m *Model) renderChatView() string {
 	// Calculate available space
 	messageHeight := m.height - 3 // Reserve space for input and status bar
-	
+
 	// Chat messages area
 	messagesView := m.renderMessages(messageHeight)
-	
+
 	// Input area
 	inputView := m.renderInputArea()
-	
+
 	// Create full-height container
 	chatContainer := lipgloss.NewStyle().
 		Width(m.width).
 		Height(messageHeight).
 		Render(messagesView)
-	
+
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		chatContainer,
@@ -229,23 +229,23 @@ func (m *Model) renderMessages(height int) string {
 			Align(lipgloss.Center).
 			Width(m.width).
 			Render("Klip Chat")
-			
+
 		welcomeMsg := lipgloss.NewStyle().
 			Align(lipgloss.Center).
 			Width(m.width).
 			Render("Welcome! Start chatting with AI or type /help for commands.")
-			
+
 		currentModel := lipgloss.NewStyle().
 			Align(lipgloss.Center).
 			Width(m.width).
 			Render(fmt.Sprintf("Current model: %s", successStyle.Render(m.currentModel.Name)))
-			
+
 		commands := lipgloss.NewStyle().
 			Foreground(textMuted).
 			Align(lipgloss.Center).
 			Width(m.width).
 			Render("Commands: /help, /models, /settings, /clear, /history")
-		
+
 		// Join with proper spacing
 		welcome := lipgloss.JoinVertical(
 			lipgloss.Left,
@@ -257,7 +257,7 @@ func (m *Model) renderMessages(height int) string {
 			"", // Empty line
 			commands,
 		)
-		
+
 		// Create container that fills available space but centers content better
 		topPadding := height / 4 // Add some top padding but not too much
 		container := lipgloss.NewStyle().
@@ -265,7 +265,7 @@ func (m *Model) renderMessages(height int) string {
 			Height(height).
 			PaddingTop(topPadding).
 			Render(welcome)
-			
+
 		return container
 	}
 
@@ -396,12 +396,12 @@ func (m *Model) renderInputArea() string {
 		promptStyle.Render(prompt+": "),
 		inputField,
 	)
-	
+
 	// Ensure the input line fills the width
 	container := lipgloss.NewStyle().
 		Width(m.width).
 		Render(inputLine)
-	
+
 	return container
 }
 
@@ -643,7 +643,7 @@ func (m *Model) renderTypingIndicator() string {
 func (m *Model) centerContent(content string) string {
 	style := lipgloss.NewStyle().
 		Width(m.width).
-		Height(m.height - 1). // Leave space for status bar
+		Height(m.height-1). // Leave space for status bar
 		Align(lipgloss.Center, lipgloss.Center)
 
 	return style.Render(content)

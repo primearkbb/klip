@@ -75,7 +75,7 @@ func New() *Model {
 		cancelFunc:       cancel,
 		logger:           logger,
 		ready:            false,
-		width:            80,  // Default width
+		width:            80, // Default width
 		height:           24, // Default height
 		loadingState:     NewLoadingState("Initializing Klip..."),
 		chatState:        NewChatState(),
